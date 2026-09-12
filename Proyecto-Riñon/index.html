@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Atlas Renal - Proyecto 3D</title>
+  <link rel="stylesheet" href="./styles.css">
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+        "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+      }
+    }
+  </script>
+</head>
+<body>
+
+  <div id="app">
+    <!-- Header Superior -->
+    <header class="top-bar">
+      <div class="logo">
+        <span class="app-title">Atlas renal</span>
+      </div>
+      <nav class="nav-tabs">
+        <button class="tab-btn active" data-tab="1">Anatomía</button>
+        <button class="tab-btn" data-tab="2">Glucosa</button>
+        <button class="tab-btn" data-tab="3">Filtración</button>
+      </nav>
+      <div class="top-actions">
+        <button class="icon-btn" title="Inicio">🏠</button>
+        <button class="icon-btn" title="Guardar">💾</button>
+        <button class="icon-btn" title="Configuración">⚙️</button>
+      </div>
+    </header>
+
+    <!-- Área Principal con Visor 3D e Interfaz -->
+    <main class="main-container">
+      
+      <!-- Toolbar Izquierda -->
+      <aside class="toolbar-left">
+        <button class="tool-btn active" id="btn-select">
+          <span class="icon">↖</span>
+          <span class="label">Seleccionar</span>
+        </button>
+        <button class="tool-btn" id="btn-isolate">
+          <span class="icon">⬡</span>
+          <span class="label">Aislar</span>
+        </button>
+        <button class="tool-btn" id="btn-highlight">
+          <span class="icon">✎</span>
+          <span class="label">Resaltar</span>
+        </button>
+        <button class="tool-btn" id="btn-hide">
+          <span class="icon">👁</span>
+          <span class="label">Mostrar / ocultar</span>
+        </button>
+        <button class="tool-btn" id="btn-xray">
+          <span class="icon">🧊</span>
+          <span class="label">Rayos X</span>
+        </button>
+      </aside>
+
+      <!-- Canvas para Three.js -->
+      <div class="canvas-container">
+        <canvas id="webgl-canvas"></canvas>
+      </div>
+
+      <!-- Panel Derecho Informativo -->
+      <aside class="info-panel-right" id="info-panel">
+        <div class="panel-header">
+          <h2 id="structure-title">Corteza renal</h2>
+          <button class="close-btn" id="close-panel">×</button>
+        </div>
+        <div class="panel-body">
+          <div class="thumb-preview">
+            <span class="thumb-placeholder">Vista Previa</span>
+          </div>
+          <p id="structure-desc">
+            Capa externa del riñón donde se localizan los glomérulos.
+          </p>
+          <div class="section-divider"></div>
+          <h3>Función</h3>
+          <p id="structure-function">
+            Filtra la sangre y da inicio a la formación de la orina.
+          </p>
+          <div class="section-divider"></div>
+          <h3>Estructuras</h3>
+          <ul class="structure-list" id="structure-list">
+            <li><span class="dot red"></span> Corteza renal</li>
+            <li><span class="dot dark-red"></span> Médula renal</li>
+            <li><span class="dot orange"></span> Pirámides renales</li>
+            <li><span class="dot light-orange"></span> Cálices menores</li>
+            <li><span class="dot yellow"></span> Cálices mayores</li>
+            <li><span class="dot beige"></span> Pelvis renal</li>
+            <li><span class="dot red-bright"></span> Arteria renal</li>
+            <li><span class="dot blue"></span> Vena renal</li>
+            <li><span class="dot yellow-bright"></span> Uréter</li>
+          </ul>
+        </div>
+      </aside>
+
+    </main>
+  </div>
+
+  <script type="module" src="main.js"></script>
+</body>
+</html>
