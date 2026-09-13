@@ -15,13 +15,9 @@
   </script>
 </head>
 <body>
-
   <div id="app">
-    <!-- Header Superior -->
     <header class="top-bar">
-      <div class="logo">
-        <span class="app-title">Atlas renal</span>
-      </div>
+      <div class="logo"><span class="app-title">Atlas renal</span></div>
       <nav class="nav-tabs">
         <button class="tab-btn active" data-tab="1">Anatomía</button>
         <button class="tab-btn" data-tab="2">Glucosa</button>
@@ -34,56 +30,66 @@
       </div>
     </header>
 
-    <!-- Área Principal con Visor 3D e Interfaz -->
     <main class="main-container">
-      
-      <!-- Toolbar Izquierda -->
       <aside class="toolbar-left">
         <button class="tool-btn active" id="btn-select">
-          <span class="icon">↖</span>
-          <span class="label">Seleccionar</span>
+          <span class="icon">↖</span><span class="label">Seleccionar</span>
         </button>
         <button class="tool-btn" id="btn-isolate">
-          <span class="icon">⬡</span>
-          <span class="label">Aislar</span>
+          <span class="icon">⬡</span><span class="label">Aislar</span>
         </button>
         <button class="tool-btn" id="btn-highlight">
-          <span class="icon">✎</span>
-          <span class="label">Resaltar</span>
+          <span class="icon">✎</span><span class="label">Resaltar</span>
         </button>
         <button class="tool-btn" id="btn-hide">
-          <span class="icon">👁</span>
-          <span class="label">Mostrar / ocultar</span>
+          <span class="icon">👁</span><span class="label">Mostrar / ocultar</span>
         </button>
         <button class="tool-btn" id="btn-xray">
-          <span class="icon">🧊</span>
-          <span class="label">Rayos X</span>
+          <span class="icon">🧊</span><span class="label">Rayos X</span>
+        </button>
+
+        <!-- Nueva herramienta de anotaciones -->
+        <div class="toolbar-divider"></div>
+        <button class="tool-btn" id="btn-draw" aria-pressed="false">
+          <span class="icon">✏️</span><span class="label">Anotar</span>
         </button>
       </aside>
 
-      <!-- Canvas para Three.js -->
       <div class="canvas-container">
         <canvas id="webgl-canvas"></canvas>
+
+        <!-- Pizarra transparente superpuesta al visor 3D -->
+        <canvas id="annotation-canvas" aria-label="Pizarra de anotaciones"></canvas>
+
+        <div class="drawing-controls" id="drawing-controls" aria-hidden="true">
+          <div class="drawing-status"><span></span> Modo anotación</div>
+          <label title="Color del marcador">
+            <span>Color</span>
+            <input type="color" id="draw-color" value="#8c2626">
+          </label>
+          <label class="width-control" title="Grosor del marcador">
+            <span>Grosor</span>
+            <input type="range" id="draw-width" min="2" max="18" value="5">
+            <output id="draw-width-value">5 px</output>
+          </label>
+          <button class="draw-control-btn" id="btn-eraser" title="Activar borrador">Borrador</button>
+          <button class="draw-control-btn" id="btn-undo" title="Deshacer último trazo">↶ Deshacer</button>
+          <button class="draw-control-btn danger" id="btn-clear" title="Borrar todas las anotaciones">Limpiar</button>
+          <button class="draw-control-btn close-draw" id="btn-close-draw" title="Cerrar modo anotación">×</button>
+        </div>
       </div>
 
-      <!-- Panel Derecho Informativo -->
       <aside class="info-panel-right" id="info-panel">
         <div class="panel-header">
           <h2 id="structure-title">Corteza renal</h2>
           <button class="close-btn" id="close-panel">×</button>
         </div>
         <div class="panel-body">
-          <div class="thumb-preview">
-            <span class="thumb-placeholder">Vista Previa</span>
-          </div>
-          <p id="structure-desc">
-            Capa externa del riñón donde se localizan los glomérulos.
-          </p>
+          <div class="thumb-preview"><span class="thumb-placeholder">Vista Previa</span></div>
+          <p id="structure-desc">Capa externa del riñón donde se localizan los glomérulos.</p>
           <div class="section-divider"></div>
           <h3>Función</h3>
-          <p id="structure-function">
-            Filtra la sangre y da inicio a la formación de la orina.
-          </p>
+          <p id="structure-function">Filtra la sangre y da inicio a la formación de la orina.</p>
           <div class="section-divider"></div>
           <h3>Estructuras</h3>
           <ul class="structure-list" id="structure-list">
@@ -99,10 +105,8 @@
           </ul>
         </div>
       </aside>
-
     </main>
   </div>
-
   <script type="module" src="main.js"></script>
 </body>
 </html>
