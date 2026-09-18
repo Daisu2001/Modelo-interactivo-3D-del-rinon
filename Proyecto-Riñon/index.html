@@ -85,24 +85,235 @@
           <button class="close-btn" id="close-panel">×</button>
         </div>
         <div class="panel-body">
-          <div class="thumb-preview"><span class="thumb-placeholder">Vista Previa</span></div>
-          <p id="structure-desc">Capa externa del riñón donde se localizan los glomérulos.</p>
-          <div class="section-divider"></div>
-          <h3>Función</h3>
-          <p id="structure-function">Filtra la sangre y da inicio a la formación de la orina.</p>
-          <div class="section-divider"></div>
-          <h3>Estructuras</h3>
-          <ul class="structure-list" id="structure-list">
-            <li><span class="dot red"></span> Corteza renal</li>
-            <li><span class="dot dark-red"></span> Médula renal</li>
-            <li><span class="dot orange"></span> Pirámides renales</li>
-            <li><span class="dot light-orange"></span> Cálices menores</li>
-            <li><span class="dot yellow"></span> Cálices mayores</li>
-            <li><span class="dot beige"></span> Pelvis renal</li>
-            <li><span class="dot red-bright"></span> Arteria renal</li>
-            <li><span class="dot blue"></span> Vena renal</li>
-            <li><span class="dot yellow-bright"></span> Uréter</li>
-          </ul>
+          <!-- VISTA 1: ANATOMÍA (Contenido anatómico original) -->
+          <div id="anatomy-view" class="panel-view">
+            <div class="thumb-preview"><span class="thumb-placeholder">Vista Previa</span></div>
+            <p id="structure-desc">Capa externa del riñón donde se localizan los glomérulos.</p>
+            <div class="section-divider"></div>
+            <h3>Función</h3>
+            <p id="structure-function">Filtra la sangre y da inicio a la formación de la orina.</p>
+            <div class="section-divider"></div>
+            <h3>Estructuras</h3>
+            <ul class="structure-list" id="structure-list">
+              <li><span class="dot red"></span> Corteza renal</li>
+              <li><span class="dot dark-red"></span> Médula renal</li>
+              <li><span class="dot orange"></span> Pirámides renales</li>
+              <li><span class="dot light-orange"></span> Cálices menores</li>
+              <li><span class="dot yellow"></span> Cálices mayores</li>
+              <li><span class="dot beige"></span> Pelvis renal</li>
+              <li><span class="dot red-bright"></span> Arteria renal</li>
+              <li><span class="dot blue"></span> Vena renal</li>
+              <li><span class="dot yellow-bright"></span> Uréter</li>
+            </ul>
+          </div>
+
+          <!-- ============================================================= -->
+          <!-- === [INICIO: SECCIÓN DE FÓRMULAS FISIOLÓGICAS (NUEVO)] ======== -->
+          <!-- ============================================================= -->
+          <div id="formulas-view" class="panel-view" style="display: none;">
+            <div class="formulas-section">
+              <!-- Sub-pestañas de fórmulas -->
+              <div class="formula-subnav">
+                <button class="formula-subtab active" id="btn-subtab-glucose">Glucosa (SGLT2/TmG)</button>
+                <button class="formula-subtab" id="btn-subtab-filtration">Filtración (Starling)</button>
+              </div>
+
+              <!-- MÓDULO DE GLUCOSA RENAL -->
+              <div id="glucose-content">
+                <!-- Parámetros clínicos interactivos -->
+                <div class="controls-card">
+                  <div class="controls-header">
+                    <span class="controls-title">Parámetros Clínicos</span>
+                    <span class="formula-badge" id="glucose-clinical-state">Normal</span>
+                  </div>
+
+                  <div class="param-group">
+                    <div class="param-label">
+                      <span>Glucemia Plasmática (P<sub>Glu</sub>):</span>
+                      <span class="param-value" id="val-pglu">100 mg/dL</span>
+                    </div>
+                    <input type="range" class="param-slider" id="slider-pglu" min="50" max="400" value="100">
+                  </div>
+
+                  <div class="param-group">
+                    <div class="param-label">
+                      <span>Filtración Glomerular (TFG):</span>
+                      <span class="param-value" id="val-tfg">125 mL/min</span>
+                    </div>
+                    <input type="range" class="param-slider" id="slider-tfg" min="30" max="180" value="125">
+                  </div>
+
+                  <div class="param-group">
+                    <div class="param-label">
+                      <span>Transporte Máximo (TmG):</span>
+                      <span class="param-value" id="val-tmg">375 mg/min</span>
+                    </div>
+                    <input type="range" class="param-slider" id="slider-tmg" min="200" max="450" value="375">
+                  </div>
+
+                  <!-- Presets rápidos -->
+                  <div class="preset-pills">
+                    <button class="preset-pill active" data-preset="normal">Normal (90)</button>
+                    <button class="preset-pill" data-preset="threshold">Umbral (180)</button>
+                    <button class="preset-pill" data-preset="glucosuria">Glucosuria (240)</button>
+                    <button class="preset-pill" data-preset="tmg">TmG Máx (350)</button>
+                  </div>
+
+                  <div class="clinical-status-tag normal" id="glucose-status-tag">
+                    <span>✓</span> <span id="glucose-status-text">Glucemia fisiológica normal. Sin pérdida de glucosa.</span>
+                  </div>
+                </div>
+
+                <!-- Tarjeta 1: Carga Filtrada (FGlu) -->
+                <div class="formula-card">
+                  <div class="formula-card-header">
+                    <span class="formula-title">1. Carga Filtrada (FL<sub>Glu</sub>)</span>
+                    <span class="formula-badge">Glomérulo</span>
+                  </div>
+                  <div class="formula-equation">
+                    FL<sub>Glu</sub> = (TFG × P<sub>Glu</sub>) / 100
+                  </div>
+                  <p class="formula-desc">Cantidad total de glucosa que atraviesa la barrera de filtración glomerular por minuto.</p>
+                  <div class="formula-result">
+                    <span>Carga calculada:</span>
+                    <span class="formula-result-value" id="res-fglu">125.0 mg/min</span>
+                  </div>
+                </div>
+
+                <!-- Tarjeta 2: Reabsorción Tubular (RGlu) -->
+                <div class="formula-card">
+                  <div class="formula-card-header">
+                    <span class="formula-title">2. Reabsorción Tubular (R<sub>Glu</sub>)</span>
+                    <span class="formula-badge amber">Túbulo Proximal</span>
+                  </div>
+                  <div class="formula-equation">
+                    R<sub>Glu</sub> = min(FL<sub>Glu</sub>, TmG)
+                  </div>
+                  <p class="formula-desc">90% reabsorbido por <strong>SGLT2</strong> (S1/S2) y 10% por <strong>SGLT1</strong> (S3). Umbral renal: ~180-200 mg/dL.</p>
+                  <div class="saturation-bar-container">
+                    <div class="saturation-bar" id="sglt2-bar" style="width: 33.3%;"></div>
+                  </div>
+                  <div class="formula-result">
+                    <span>Reabsorción:</span>
+                    <span class="formula-result-value" id="res-rglu">125.0 mg/min</span>
+                  </div>
+                </div>
+
+                <!-- Tarjeta 3: Excreción Urinaria (EGlu) -->
+                <div class="formula-card">
+                  <div class="formula-card-header">
+                    <span class="formula-title">3. Excreción Urinaria (E<sub>Glu</sub>)</span>
+                    <span class="formula-badge" id="badge-excretion">Vía Urinaria</span>
+                  </div>
+                  <div class="formula-equation">
+                    E<sub>Glu</sub> = max(0, FL<sub>Glu</sub> - R<sub>Glu</sub>)
+                  </div>
+                  <p class="formula-desc">Glucosa no reabsorbida que pasa a la orina hacia la pelvis renal y el uréter.</p>
+                  <div class="formula-result">
+                    <span>Excreción en orina:</span>
+                    <span class="formula-result-value" id="res-eglu">0.0 mg/min</span>
+                  </div>
+                </div>
+
+                <!-- Tarjeta 4: Fracción Excretada (FEGlu) -->
+                <div class="formula-card">
+                  <div class="formula-card-header">
+                    <span class="formula-title">4. Fracción Excretada (FE<sub>Glu</sub>)</span>
+                    <span class="formula-badge teal">Eficiencia</span>
+                  </div>
+                  <div class="formula-equation">
+                    FE<sub>Glu</sub> = (E<sub>Glu</sub> / FL<sub>Glu</sub>) × 100%
+                  </div>
+                  <div class="formula-result">
+                    <span>Fracción excretada:</span>
+                    <span class="formula-result-value" id="res-feglu">0.0%</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- MÓDULO DE FILTRACIÓN GLOMERULAR / STARLING -->
+              <div id="filtration-content" style="display: none;">
+                <!-- Parámetros de Fuerzas de Starling -->
+                <div class="controls-card">
+                  <div class="controls-header">
+                    <span class="controls-title">Fuerzas de Starling</span>
+                    <span class="formula-badge teal">Presiones</span>
+                  </div>
+
+                  <div class="param-group">
+                    <div class="param-label">
+                      <span>P<sub>GC</sub> (Hidrostática Capilar):</span>
+                      <span class="param-value" id="val-pgc">60 mmHg</span>
+                    </div>
+                    <input type="range" class="param-slider" id="slider-pgc" min="45" max="75" value="60">
+                  </div>
+
+                  <div class="param-group">
+                    <div class="param-label">
+                      <span>P<sub>BS</sub> (Hidrostática Bowman):</span>
+                      <span class="param-value" id="val-pbs">18 mmHg</span>
+                    </div>
+                    <input type="range" class="param-slider" id="slider-pbs" min="10" max="25" value="18">
+                  </div>
+
+                  <div class="param-group">
+                    <div class="param-label">
+                      <span>π<sub>GC</sub> (Oncótica Capilar):</span>
+                      <span class="param-value" id="val-pigc">32 mmHg</span>
+                    </div>
+                    <input type="range" class="param-slider" id="slider-pigc" min="20" max="40" value="32">
+                  </div>
+
+                  <div class="param-group">
+                    <div class="param-label">
+                      <span>π<sub>BS</sub> (Oncótica Bowman):</span>
+                      <span class="param-value" id="val-pibs">0 mmHg</span>
+                    </div>
+                    <input type="range" class="param-slider" id="slider-pibs" min="0" max="5" value="0">
+                  </div>
+
+                  <div class="clinical-status-tag normal" id="starling-status-tag">
+                    <span>✓</span> <span id="starling-status-text">Ultrafiltración glomerular fisiológica activa.</span>
+                  </div>
+                </div>
+
+                <!-- Tarjeta 1: Presión de Filtración Neta (PFN) -->
+                <div class="formula-card">
+                  <div class="formula-card-header">
+                    <span class="formula-title">1. Presión Neta (PFN / NFP)</span>
+                    <span class="formula-badge">Glomérulo</span>
+                  </div>
+                  <div class="formula-equation">
+                    PFN = (P<sub>GC</sub> - P<sub>BS</sub>) - (π<sub>GC</sub> - π<sub>BS</sub>)
+                  </div>
+                  <p class="formula-desc">Balance neto entre las presiones hidrostáticas y oncóticas transcapilares.</p>
+                  <div class="formula-result">
+                    <span>PFN resultante:</span>
+                    <span class="formula-result-value" id="res-pfn">+10.0 mmHg</span>
+                  </div>
+                </div>
+
+                <!-- Tarjeta 2: TFG estimada por Starling -->
+                <div class="formula-card">
+                  <div class="formula-card-header">
+                    <span class="formula-title">2. TFG = K<sub>f</sub> × PFN</span>
+                    <span class="formula-badge teal">K<sub>f</sub> = 12.5</span>
+                  </div>
+                  <div class="formula-equation">
+                    TFG = 12.5 mL/min/mmHg × PFN
+                  </div>
+                  <p class="formula-desc">K<sub>f</sub> representa el coeficiente de conductividad hidráulica y área de superficie de filtración.</p>
+                  <div class="formula-result">
+                    <span>TFG estimada:</span>
+                    <span class="formula-result-value" id="res-starling-tfg">125.0 mL/min</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- ============================================================= -->
+          <!-- === [FIN: SECCIÓN DE FÓRMULAS FISIOLÓGICAS (NUEVO)] ========== -->
+          <!-- ============================================================= -->
         </div>
       </aside>
     </main>
