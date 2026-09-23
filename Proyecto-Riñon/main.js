@@ -40,19 +40,20 @@ controls.dampingFactor = 0.05;
 const loader = new GLTFLoader();
 let kidneyModel = null;
 let nephronModel = null;
+let nephronBox = new THREE.Box3(); // Guardará los límites reales de la nefrona
 let currentActiveTab = '1';
 
 // --- SISTEMA DE PARTÍCULAS Y SLIDER ---
 const flowSlider = document.querySelector('#flow-slider');
 const flowValueLabel = document.querySelector('#flow-value');
 
-const maxParticles = 150;
-const bloodGeo = new THREE.SphereGeometry(0.015, 8, 8);
-const bloodMat = new THREE.MeshBasicMaterial({ color: 0xff3333, transparent: true, opacity: 0.85 });
+const maxParticles = 200;
+const bloodGeo = new THREE.SphereGeometry(0.02, 8, 8);
+const bloodMat = new THREE.MeshBasicMaterial({ color: 0xff3333, transparent: true, opacity: 0.9 });
 const bloodParticles = [];
 
-const glucoseGeo = new THREE.SphereGeometry(0.01, 8, 8);
-const glucoseMat = new THREE.MeshBasicMaterial({ color: 0x33ff99, transparent: true, opacity: 0.9 });
+const glucoseGeo = new THREE.SphereGeometry(0.015, 8, 8);
+const glucoseMat = new THREE.MeshBasicMaterial({ color: 0x33ff99, transparent: true, opacity: 0.95 });
 const glucoseParticles = [];
 
 const flowGroup = new THREE.Group();
@@ -60,12 +61,20 @@ scene.add(flowGroup);
 
 for (let i = 0; i < maxParticles; i++) {
   const bloodMesh = new THREE.Mesh(bloodGeo, bloodMat);
-  bloodMesh.userData = { progress: Math.random(), baseSpeed: 0.003 + Math.random() * 0.002 };
+  bloodMesh.userData = { 
+    progress: Math.random(), 
+    baseSpeed: 0.002 + Math.random() * 0.002,
+    offsetSeed: Math.random() * 10 
+  };
   flowGroup.add(bloodMesh);
   bloodParticles.push(bloodMesh);
 
   const glucoseMesh = new THREE.Mesh(glucoseGeo, glucoseMat);
-  glucoseMesh.userData = { progress: Math.random(), baseSpeed: 0.002 + Math.random() * 0.002 };
+  glucoseMesh.userData = { 
+    progress: Math.random(), 
+    baseSpeed: 0.0015 + Math.random() * 0.002,
+    offsetSeed: Math.random() * 10 
+  };
   flowGroup.add(glucoseMesh);
   glucoseParticles.push(glucoseMesh);
 }
@@ -114,6 +123,10 @@ loader.load(
   (gltf) => {
     nephronModel = gltf.scene;
     setupModel(nephronModel);
+    
+    // Calculamos las medidas exactas del modelo ya centrado
+    nephronBox.setFromObject(nephronModel);
+
     scene.add(nephronModel);
 
     nephronModel.visible = currentActiveTab === '2' || currentActiveTab === '3';
@@ -366,31 +379,24 @@ closeBtn.addEventListener('click', () => {
   setTimeout(resizeCanvas, 300);
 });
 
-// --- RUTA 3D EN POSICIÓN (0,0,0) CENTRADA ---
-const nephronCurve = new THREE.CatmullRomCurve3([
-  new THREE.Vector3(-0.03,  0.45, 0.0),  
-  new THREE.Vector3(-0.08,  0.30, 0.0),  
-  new THREE.Vector3(-0.05,  0.15, 0.0),  
-  new THREE.Vector3(-0.08,  0.05, 0.0),  
-  new THREE.Vector3(-0.05, -0.45, 0.0),  
-  new THREE.Vector3( 0.02, -0.10, 0.0),  
-  new THREE.Vector3( 0.04,  0.35, 0.0)   
-]);
-
 // --- LOOP DE ANIMACIÓN ---
 function animate() {
   requestAnimationFrame(animate);
   resizeCanvas();
   controls.update();
 
-  // --- ANIMAR FLUJO EN EL ORIGEN (0,0,0) ---
+  // --- ANIMAR FLUJO ADAPTADO AL INTERIOR DEL MODELO ---
   if ((currentActiveTab === '2' || currentActiveTab === '3') && nephronModel) {
     flowGroup.visible = true;
 
     const sliderMultiplier = flowSlider ? parseFloat(flowSlider.value) : 1.0;
     const activeCount = Math.floor(maxParticles * (sliderMultiplier / 3.0));
 
-    // Actualizar sangre (rojas)
+    const minY = nephronBox.min.y;
+    const maxY = nephronBox.max.y;
+    const heightSpan = maxY - minY;
+
+    // Actualizar sangre (rojas) con bucles arriba y flujo recto abajo
     bloodParticles.forEach((p, index) => {
       if (index < activeCount) {
         p.visible = true;
@@ -399,14 +405,27 @@ function animate() {
 
         p.scale.setScalar(sliderMultiplier * 0.08);
 
-        const point = nephronCurve.getPoint(p.userData.progress);
-        p.position.copy(point); // Directamente en la posición 0,0,0 con la curva base
+        const currentY = maxY - (p.userData.progress * heightSpan);
+        
+        let radius = 0.04;
+        let angle = p.userData.progress * Math.PI * 12 + p.userData.offsetSeed;
+        let xOffset = 0;
+
+        // Si está en la parte superior, expandimos el radio para cubrir los túbulos contorneados
+        if (currentY > (minY + heightSpan * 0.5)) {
+          radius = 0.15;
+          xOffset = Math.sin(p.userData.progress * Math.PI * 8) * 0.1;
+        }
+
+        p.position.x = Math.sin(angle) * radius + xOffset;
+        p.position.y = currentY;
+        p.position.z = Math.cos(angle) * radius;
       } else {
         p.visible = false;
       }
     });
 
-    // Actualizar glucosa (verdes - filtrándose)
+    // Actualizar glucosa (verdes - filtrándose por los glomérulos y túbulos)
     glucoseParticles.forEach((p, index) => {
       if (index < activeCount) {
         p.visible = true;
@@ -415,8 +434,19 @@ function animate() {
 
         p.scale.setScalar(sliderMultiplier * 0.06);
 
-        const point = nephronCurve.getPoint(p.userData.progress);
-        p.position.copy(point);
+        const currentY = maxY - (p.userData.progress * heightSpan);
+        let radius = 0.03;
+        let angle = p.userData.progress * Math.PI * 16 + p.userData.offsetSeed;
+        let xOffset = 0;
+
+        if (currentY > (minY + heightSpan * 0.5)) {
+          radius = 0.13;
+          xOffset = Math.cos(p.userData.progress * Math.PI * 8) * 0.1;
+        }
+
+        p.position.x = Math.cos(angle) * radius + xOffset;
+        p.position.y = currentY;
+        p.position.z = Math.sin(angle) * radius;
       } else {
         p.visible = false;
       }
