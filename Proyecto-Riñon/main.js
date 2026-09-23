@@ -42,6 +42,41 @@ let kidneyModel = null;
 let nephronModel = null;
 let currentActiveTab = '1';
 
+const flowSlider = document.querySelector('#flow-slider');
+const flowValueLabel = document.querySelector('#flow-value');
+
+const maxParticles = 200;
+const bloodGeo = new THREE.SphereGeometry(0.05, 8, 8);
+const bloodMat = new THREE.MeshBasicMaterial({ color: 0xff3333, transparent: true, opacity: 0.8 });
+const bloodParticles = [];
+
+const glucoseGeo = new THREE.SphereGeometry(0.03, 8, 8);
+const glucoseMat = new THREE.MeshBasicMaterial({ color: 0x33ff99, transparent: true, opacity: 0.9 });
+const glucoseParticles = [];
+
+const flowGroup = new THREE.Group();
+scene.add(flowGroup);
+
+// Inicializamos el grupo de partículas y las guardamos en arrays
+for (let i = 0; i < maxParticles; i++) {
+  const bloodMesh = new THREE.Mesh(bloodGeo, bloodMat);
+  bloodMesh.userData = { progress: Math.random(), baseSpeed: 0.005 + Math.random() * 0.005 };
+  flowGroup.add(bloodMesh);
+  bloodParticles.push(bloodMesh);
+
+  const glucoseMesh = new THREE.Mesh(glucoseGeo, glucoseMat);
+  glucoseMesh.userData = { progress: Math.random(), baseSpeed: 0.003 + Math.random() * 0.004 };
+  flowGroup.add(glucoseMesh);
+  glucoseParticles.push(glucoseMesh);
+}
+
+// Actualizar el texto del slider en tiempo real cuando el usuario lo mueva
+if (flowSlider) {
+  flowSlider.addEventListener('input', (e) => {
+    if (flowValueLabel) flowValueLabel.textContent = e.target.value + 'x';
+  });
+}
+
 function setupModel(model) {
   model.updateMatrixWorld(true);
   const box = new THREE.Box3().setFromObject(model);
@@ -333,8 +368,63 @@ function animate() {
   requestAnimationFrame(animate);
   resizeCanvas();
   controls.update();
+
+  // --- ANIMAR FLUJO DE SANGRE Y GLUCOSA CON SLIDER ---
+  // Solo se ejecutan y se muestran si estamos en la pestaña 2 (Glucosa) o 3 (Filtración)
+  if (currentActiveTab === '2' || currentActiveTab === '3') {
+    flowGroup.visible = true;
+
+    // Obtenemos el valor actual del slider (si no existe, toma 1.0 por defecto)
+    const sliderMultiplier = flowSlider ? parseFloat(flowSlider.value) : 1.0;
+    
+    // Calculamos cuántas partículas mostrar según la posición del slider (máximo 200)
+    const activeCount = Math.floor(maxParticles * (sliderMultiplier / 3.0));
+
+    // Actualizar partículas de sangre (rojas)
+    bloodParticles.forEach((p, index) => {
+      if (index < activeCount) {
+        p.visible = true;
+        // La velocidad aumenta o disminuye según el slider
+        p.userData.progress += p.userData.baseSpeed * sliderMultiplier;
+        if (p.userData.progress > 1) p.userData.progress = 0;
+
+        // El tamaño de las esferas cambia de acuerdo al slider
+        p.scale.setScalar(sliderMultiplier);
+
+        // Trayectoria simulada del flujo sanguíneo
+        const t = p.userData.progress * Math.PI * 4;
+        p.position.x = Math.sin(t) * 0.8;
+        p.position.y = (p.userData.progress - 0.5) * 2;
+        p.position.z = Math.cos(t) * 0.8;
+      } else {
+        p.visible = false; // Se ocultan las sobrantes si bajas el slider
+      }
+    });
+
+    // Actualizar partículas de glucosa (verdes - filtrándose)
+    glucoseParticles.forEach((p, index) => {
+      if (index < activeCount) {
+        p.visible = true;
+        // La glucosa tiene una tasa de filtración ligeramente distinta basada en el slider
+        p.userData.progress += p.userData.baseSpeed * (sliderMultiplier * 1.2);
+        if (p.userData.progress > 1) p.userData.progress = 0;
+
+        p.scale.setScalar(sliderMultiplier);
+
+        // Trayectoria simulada de filtración hacia los túbulos
+        const t = p.userData.progress * Math.PI * 4;
+        p.position.x = Math.cos(t) * 1.0 + (p.userData.progress * 0.5);
+        p.position.y = (p.userData.progress - 0.5) * 1.5;
+        p.position.z = Math.sin(t) * 1.0;
+      } else {
+        p.visible = false;
+      }
+    });
+
+  } else {
+    // Si estás en la pestaña de Anatomía (tab 1), ocultamos las partículas
+    flowGroup.visible = false;
+  }
+
   renderer.render(scene, camera);
 }
-
-resizeAnnotationCanvas();
-animate();
