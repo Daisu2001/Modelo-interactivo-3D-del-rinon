@@ -91,13 +91,16 @@
           <h3>Función</h3>
           <p id="structure-function">Filtra la sangre y da inicio a la formación de la orina.</p>
 
-      <div class="section-divider"></div>
-          <h3>Simulación de Flujo</h3>
-          <div class="control-group" style="margin-top: 10px; display: flex; flex-direction: column; gap: 8px;">
-            <label for="flow-slider" style="font-size: 13px; color: #555;">Tasa de Filtración / Glucosa:</label>
-            <div style="display: flex; align-items: center; gap: 10px;">
-              <input type="range" id="flow-slider" min="0.1" max="3.0" step="0.1" value="1.0" style="flex: 1;">
-              <span id="flow-value" style="font-size: 13px; font-weight: bold;">1.0x</span>
+          <!-- SECCIÓN DEL SLIDER ENVUELTA PARA CONTROLAR SU VISIBILIDAD -->
+          <div id="simulation-panel-section" style="display: none;">
+            <div class="section-divider"></div>
+            <h3>Simulación de Flujo</h3>
+            <div class="control-group" style="margin-top: 10px; display: flex; flex-direction: column; gap: 8px;">
+              <label for="flow-slider" style="font-size: 13px; color: #555;">Tasa de Filtración / Glucosa:</label>
+              <div style="display: flex; align-items: center; gap: 10px;">
+                <input type="range" id="flow-slider" min="0.1" max="3.0" step="0.1" value="1.0" style="flex: 1;">
+                <span id="flow-value" style="font-size: 13px; font-weight: bold;">1.0x</span>
+              </div>
             </div>
           </div>
 

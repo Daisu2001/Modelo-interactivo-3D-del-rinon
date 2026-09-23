@@ -42,6 +42,7 @@ let kidneyModel = null;
 let nephronModel = null;
 let currentActiveTab = '1';
 
+// --- SISTEMA DE PARTÍCULAS Y SLIDER ---
 const flowSlider = document.querySelector('#flow-slider');
 const flowValueLabel = document.querySelector('#flow-value');
 
@@ -57,7 +58,7 @@ const glucoseParticles = [];
 const flowGroup = new THREE.Group();
 scene.add(flowGroup);
 
-// Inicializamos el grupo de partículas y las guardamos en arrays
+// Inicializamos el grupo de partículas
 for (let i = 0; i < maxParticles; i++) {
   const bloodMesh = new THREE.Mesh(bloodGeo, bloodMat);
   bloodMesh.userData = { progress: Math.random(), baseSpeed: 0.005 + Math.random() * 0.005 };
@@ -70,7 +71,7 @@ for (let i = 0; i < maxParticles; i++) {
   glucoseParticles.push(glucoseMesh);
 }
 
-// Actualizar el texto del slider en tiempo real cuando el usuario lo mueva
+// Actualizar el texto del slider en tiempo real
 if (flowSlider) {
   flowSlider.addEventListener('input', (e) => {
     if (flowValueLabel) flowValueLabel.textContent = e.target.value + 'x';
@@ -116,9 +117,6 @@ loader.load(
     nephronModel = gltf.scene;
     setupModel(nephronModel);
     scene.add(nephronModel);
-    const box = new THREE.Box3().setFromObject(nephronModel);
-    const size = box.getSize(new THREE.Vector3());
-    console.log('📐 Tamaño de la nefrona cargada:', size);
     nephronModel.visible = currentActiveTab === '2' || currentActiveTab === '3';
     if (currentActiveTab === '2' || currentActiveTab === '3') focusCameraOn(nephronModel);
   },
@@ -317,10 +315,16 @@ canvas.addEventListener('click', (event) => {
 
 // --- CAMBIO DE MÓDULOS EN LA BARRA SUPERIOR ---
 const tabBtns = document.querySelectorAll('.tab-btn');
+const simulationSection = document.querySelector('#simulation-panel-section');
 
 function switchModule(id) {
   currentActiveTab = id;
   tabBtns.forEach((btn) => btn.classList.toggle('active', btn.dataset.tab === id));
+
+  if (simulationSection) {
+    simulationSection.style.display = (id === '2' || id === '3') ? 'block' : 'none';
+  }
+
   if (kidneyModel) {
     kidneyModel.visible = id === '1';
     if (id === '1') focusCameraOn(kidneyModel);
@@ -363,68 +367,74 @@ closeBtn.addEventListener('click', () => {
   setTimeout(resizeCanvas, 300);
 });
 
+// --- CURVA 3D COMPACTA Y CENTRADA DENTRO DEL MODELO DE LA NEFRONA ---
+const nephronCurve = new THREE.CatmullRomCurve3([
+  new THREE.Vector3(0.0, 0.75, 0),    // Entrada superior
+  new THREE.Vector3(-0.08, 0.45, 0),  // Zona del glomérulo
+  new THREE.Vector3(0.05, 0.25, 0),   // Primera vuelta
+  new THREE.Vector3(-0.03, 0.0, 0),   // Zona media
+  new THREE.Vector3(-0.03, -0.7, 0),  // Fondo del Asa de Henle
+  new THREE.Vector3(0.03, -0.1, 0),   // Subida
+  new THREE.Vector3(0.05, 0.55, 0)    // Salida / túbulo colector
+]);
+
 // --- LOOP DE ANIMACIÓN ---
 function animate() {
   requestAnimationFrame(animate);
   resizeCanvas();
   controls.update();
 
-  // --- ANIMAR FLUJO DE SANGRE Y GLUCOSA CON SLIDER ---
-  // Solo se ejecutan y se muestran si estamos en la pestaña 2 (Glucosa) o 3 (Filtración)
-  if (currentActiveTab === '2' || currentActiveTab === '3') {
+  // --- ANIMAR FLUJO DENTRO DE LOS TÚBULOS ---
+  if ((currentActiveTab === '2' || currentActiveTab === '3') && nephronModel) {
     flowGroup.visible = true;
 
-    // Obtenemos el valor actual del slider (si no existe, toma 1.0 por defecto)
     const sliderMultiplier = flowSlider ? parseFloat(flowSlider.value) : 1.0;
-    
-    // Calculamos cuántas partículas mostrar según la posición del slider (máximo 200)
     const activeCount = Math.floor(maxParticles * (sliderMultiplier / 3.0));
 
-    // Actualizar partículas de sangre (rojas)
+    // Actualizar sangre (rojas)
     bloodParticles.forEach((p, index) => {
       if (index < activeCount) {
         p.visible = true;
-        // La velocidad aumenta o disminuye según el slider
         p.userData.progress += p.userData.baseSpeed * sliderMultiplier;
         if (p.userData.progress > 1) p.userData.progress = 0;
 
-        // El tamaño de las esferas cambia de acuerdo al slider
-        p.scale.setScalar(sliderMultiplier);
+        p.scale.setScalar(sliderMultiplier * 0.12);
 
-        // Trayectoria simulada del flujo sanguíneo
-        const t = p.userData.progress * Math.PI * 4;
-        p.position.x = Math.sin(t) * 0.8;
-        p.position.y = (p.userData.progress - 0.5) * 2;
-        p.position.z = Math.cos(t) * 0.8;
+        const point = nephronCurve.getPoint(p.userData.progress);
+        p.position.copy(point);
+        
+        p.position.x += Math.sin(p.userData.progress * 30) * 0.01;
+        p.position.z += Math.cos(p.userData.progress * 30) * 0.01;
       } else {
-        p.visible = false; // Se ocultan las sobrantes si bajas el slider
+        p.visible = false;
       }
     });
 
-    // Actualizar partículas de glucosa (verdes - filtrándose)
+    // Actualizar glucosa (verdes - filtrándose)
     glucoseParticles.forEach((p, index) => {
       if (index < activeCount) {
         p.visible = true;
-        // La glucosa tiene una tasa de filtración ligeramente distinta basada en el slider
         p.userData.progress += p.userData.baseSpeed * (sliderMultiplier * 1.2);
         if (p.userData.progress > 1) p.userData.progress = 0;
 
-        p.scale.setScalar(sliderMultiplier);
+        p.scale.setScalar(sliderMultiplier * 0.1);
 
-        // Trayectoria simulada de filtración hacia los túbulos
-        const t = p.userData.progress * Math.PI * 4;
-        p.position.x = Math.cos(t) * 1.0 + (p.userData.progress * 0.5);
-        p.position.y = (p.userData.progress - 0.5) * 1.5;
-        p.position.z = Math.sin(t) * 1.0;
+        const point = nephronCurve.getPoint(p.userData.progress);
+        p.position.copy(point);
+
+        p.position.x += Math.cos(p.userData.progress * 35) * 0.012;
+        p.position.z += Math.sin(p.userData.progress * 35) * 0.012;
       } else {
         p.visible = false;
       }
     });
 
   } else {
-    // Si estás en la pestaña de Anatomía (tab 1), ocultamos las partículas
     flowGroup.visible = false;
   }
 
   renderer.render(scene, camera);
 }
+
+resizeAnnotationCanvas();
+animate();
