@@ -41,6 +41,7 @@ const loader = new GLTFLoader();
 let kidneyModel = null;
 let nephronModel = null;
 let currentActiveTab = '1';
+let isCutViewActive = false;
 
 function setupModel(model) {
   model.updateMatrixWorld(true);
@@ -52,44 +53,143 @@ function setupModel(model) {
 
   model.traverse((child) => {
     if (child.isMesh) {
+      // Los GLB comparten materiales entre meshes con frecuencia. Clonarlos aquí
+      // evita que ocultar una pieza cambie accidentalmente otra que usa el mismo material.
       if (child.material) {
-        child.material.side = THREE.DoubleSide;
-        child.material.transparent = false;
-        child.material.opacity = 1.0;
+        child.material = Array.isArray(child.material)
+          ? child.material.map((material) => material.clone())
+          : child.material.clone();
+        splitVertexColorsIntoMaterialGroups(child);
+        forEachMaterial(child, (material) => {
+          material.side = THREE.DoubleSide;
+          material.transparent = false;
+          material.opacity = 1.0;
+          material.visible = true;
+          material.needsUpdate = true;
+        });
       }
       child.visible = true;
     }
   });
 }
 
-loader.load(
-  './Models/Kidney.glb',
-  (gltf) => {
-    kidneyModel = gltf.scene;
+function forEachMaterial(mesh, callback) {
+  if (!mesh.material) return;
+  const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+  materials.forEach(callback);
+}
+
+function getVertexColorKey(colorAttribute, vertexIndex) {
+  // Los GLB de vasos se exportaron con identificadores de color por vértice,
+  // pero sin slots de materiales. Cuantizar evita separar caras que comparten
+  // visualmente el mismo color por pequeñas diferencias de coma flotante.
+  const red = Math.round(colorAttribute.getX(vertexIndex) * 255);
+  const green = Math.round(colorAttribute.getY(vertexIndex) * 255);
+  const blue = Math.round(colorAttribute.getZ(vertexIndex) * 255);
+  return `${red},${green},${blue}`;
+}
+
+function splitVertexColorsIntoMaterialGroups(mesh) {
+  if (Array.isArray(mesh.material)) return;
+
+  const sourceGeometry = mesh.geometry;
+  const colorAttribute = sourceGeometry.getAttribute('color');
+  const sourceIndex = sourceGeometry.getIndex();
+  if (!colorAttribute || !sourceIndex || sourceIndex.count % 3 !== 0) return;
+
+  const trianglesByColor = new Map();
+  for (let offset = 0; offset < sourceIndex.count; offset += 3) {
+    const vertexIndex = sourceIndex.getX(offset);
+    const colorKey = getVertexColorKey(colorAttribute, vertexIndex);
+    if (!trianglesByColor.has(colorKey)) trianglesByColor.set(colorKey, []);
+    trianglesByColor.get(colorKey).push(
+      vertexIndex,
+      sourceIndex.getX(offset + 1),
+      sourceIndex.getX(offset + 2)
+    );
+  }
+
+  // Un color implica que ya no hay regiones distinguibles por material.
+  if (trianglesByColor.size < 2) return;
+
+  const geometry = sourceGeometry.clone();
+  const orderedIndices = new sourceIndex.array.constructor(sourceIndex.count);
+  const materials = [];
+  let writeOffset = 0;
+
+  geometry.clearGroups();
+  for (const [colorKey, triangleIndices] of trianglesByColor) {
+    orderedIndices.set(triangleIndices, writeOffset);
+    geometry.addGroup(writeOffset, triangleIndices.length, materials.length);
+
+    const material = mesh.material.clone();
+    material.name = `Color ${colorKey}`;
+    materials.push(material);
+    writeOffset += triangleIndices.length;
+  }
+
+  geometry.setIndex(new THREE.BufferAttribute(orderedIndices, 1));
+  mesh.geometry = geometry;
+  mesh.material = materials;
+}
+
+const kidneyPartPaths = [
+  './Models/Arteria.glb',
+  './Models/CALIZ.glb',
+  './Models/corte_rinon.glb',
+  './Models/Piramides_completas.glb',
+  './Models/Piramides_corte.glb',
+  './Models/Rinon_completo.glb',
+  './Models/Vena.glb'
+];
+
+// La anatomía renal es una única unidad de escena, aunque sus piezas se entreguen
+// en archivos independientes. Así se rota, enfoca y selecciona como un solo riñón.
+Promise.all(kidneyPartPaths.map((path) => loader.loadAsync(path)))
+  .then((gltfs) => {
+    kidneyModel = new THREE.Group();
+    kidneyModel.name = 'Riñón';
+    gltfs.forEach((gltf, index) => {
+      const part = gltf.scene;
+      // Las dos exportaciones de corte sustituyen a las piezas completas.
+      part.userData.isCutVariant = /corte_rinon|Piramides_corte/.test(kidneyPartPaths[index]);
+      part.userData.isDefaultAnatomyPart = /Arteria|CALIZ|Rinon_completo|Vena/.test(
+        kidneyPartPaths[index]
+      );
+      part.userData.isSupportingAnatomyPart = /Arteria|CALIZ|Vena/.test(
+        kidneyPartPaths[index]
+      );
+
+      if (kidneyPartPaths[index].endsWith('/Rinon_completo.glb')) {
+        // Este GLB fue exportado con un origen diferente al de corte_rinon.
+        // Se usa la traslación de su contraparte cortada para que ambas se
+        // reemplacen exactamente en la misma referencia espacial.
+        part.position.z = -2.8378283977508545;
+      }
+      kidneyModel.add(part);
+    });
+    // La rotación debe afectar todo el conjunto (riñón, cáliz, arteria y vena)
+    // para preservar la anatomía relativa. Se centra después de rotarlo.
+    kidneyModel.rotation.y = Math.PI;
     setupModel(kidneyModel);
     scene.add(kidneyModel);
+    setCutView(isCutViewActive);
     kidneyModel.visible = currentActiveTab === '1';
     if (currentActiveTab === '1') focusCameraOn(kidneyModel);
-  },
-  undefined,
-  (err) => console.error('❌ Error al cargar /Models/Kidney.glb:', err)
-);
+  })
+  .catch((err) => console.error('❌ Error al cargar las piezas del riñón:', err));
 
-loader.load(
-  './Models/nefrona.glb',
-  (gltf) => {
+loader.loadAsync('./Models/Nefrona.glb')
+  .then((gltf) => {
     nephronModel = gltf.scene;
     setupModel(nephronModel);
     scene.add(nephronModel);
     const box = new THREE.Box3().setFromObject(nephronModel);
-    const size = box.getSize(new THREE.Vector3());
-    console.log('📐 Tamaño de la nefrona cargada:', size);
+    console.log('📐 Tamaño de la nefrona cargada:', box.getSize(new THREE.Vector3()));
     nephronModel.visible = currentActiveTab === '2' || currentActiveTab === '3';
     if (currentActiveTab === '2' || currentActiveTab === '3') focusCameraOn(nephronModel);
-  },
-  undefined,
-  (err) => console.error('❌ Error al cargar /Models/nefrona.glb:', err)
-);
+  })
+  .catch((err) => console.error('❌ Error al cargar /Models/Nefrona.glb:', err));
 
 function focusCameraOn(model) {
   if (!model) return;
@@ -179,6 +279,9 @@ function getNormalizedPoint(event) {
 function setDrawingMode(enabled) {
   drawingMode = enabled;
   if (enabled) {
+    // Dibujar sustituye la herramienta activa; una pieza aislada no debe quedar
+    // oculta cuando el usuario vuelva a la escena.
+    restoreIsolation();
     previousToolButton =
       document.querySelector('.tool-btn.active:not(#btn-draw)') || previousToolButton;
     document.querySelectorAll('.tool-btn').forEach((button) => button.classList.remove('active'));
@@ -264,19 +367,104 @@ function resizeCanvas() {
 // --- RAYCASTER (SELECCIÓN AL HACER CLIC) ---
 const raycaster = new THREE.Raycaster();
 const mouse = new THREE.Vector2();
+let isolatedMaterial = null;
+let isolatedModel = null;
+
+function getActiveModel() {
+  return currentActiveTab === '1' ? kidneyModel : nephronModel;
+}
+
+function restoreIsolation() {
+  if (!isolatedModel) return;
+  isolatedModel.traverse((child) => {
+    if (child.isMesh) {
+      child.visible = true;
+      forEachMaterial(child, (material) => {
+        material.visible = true;
+        material.needsUpdate = true;
+      });
+    }
+  });
+  isolatedMaterial = null;
+  isolatedModel = null;
+}
+
+function isolateMaterial(model, mesh, materialIndex = 0) {
+  const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+  const selectedMaterial = materials[materialIndex];
+  if (!selectedMaterial) return;
+
+  if (isolatedMaterial === selectedMaterial && isolatedModel === model) {
+    restoreIsolation();
+    return;
+  }
+
+  // Mientras haya un material aislado, ningún otro clic puede cambiar la
+  // selección. La restauración ocurre exclusivamente al repetir el clic
+  // sobre ese mismo material (o al cambiar de herramienta).
+  if (isolatedModel) return;
+  model.traverse((child) => {
+    if (child.isMesh) {
+      child.visible = true;
+      forEachMaterial(child, (material) => {
+        material.visible = material === selectedMaterial;
+        material.needsUpdate = true;
+      });
+    }
+  });
+  isolatedMaterial = selectedMaterial;
+  isolatedModel = model;
+}
+
+function setCutView(enabled) {
+  isCutViewActive = enabled;
+  if (!kidneyModel) return;
+
+  kidneyModel.children.forEach((part) => {
+    // La vista normal contiene solo el riñón completo, vasos y cáliz. El corte
+    // sustituye el riñón por sus versiones cortadas y mantiene sus conexiones.
+    part.visible = enabled
+      ? part.userData.isCutVariant === true || part.userData.isSupportingAnatomyPart === true
+      : part.userData.isDefaultAnatomyPart === true;
+  });
+}
+
+function toggleMaterialTransparency(mesh, materialIndex = 0) {
+  const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+  const material = materials[materialIndex];
+  if (!material) return;
+
+  const makeTransparent = material.userData.atlasHidden !== true;
+  material.transparent = makeTransparent;
+  material.opacity = makeTransparent ? 0.25 : 1.0;
+  material.userData.atlasHidden = makeTransparent;
+  material.needsUpdate = true;
+}
 
 canvas.addEventListener('click', (event) => {
-  const activeModel = currentActiveTab === '1' ? kidneyModel : nephronModel;
+  const activeModel = getActiveModel();
   if (!activeModel) return;
   const rect = canvas.getBoundingClientRect();
   mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
   mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
   raycaster.setFromCamera(mouse, camera);
   const intersects = raycaster.intersectObjects(activeModel.children, true);
-  if (intersects.length > 0) {
-    const selectedObject = intersects[0].object;
+  const hit = intersects.find(({ object, face }) => {
+    const materials = Array.isArray(object.material) ? object.material : [object.material];
+    return materials[face?.materialIndex ?? 0]?.visible !== false;
+  });
+  if (hit) {
+    const selectedObject = hit.object;
     document.querySelector('#structure-title').innerText =
       selectedObject.name || 'Estructura seleccionada';
+
+    const activeToolId = document.querySelector('.tool-btn.active')?.id;
+    if (activeToolId === 'btn-isolate') {
+      isolateMaterial(activeModel, selectedObject, hit.face?.materialIndex ?? 0);
+    }
+    if (activeToolId === 'btn-hide') {
+      toggleMaterialTransparency(selectedObject, hit.face?.materialIndex ?? 0);
+    }
   }
 });
 
@@ -284,6 +472,7 @@ canvas.addEventListener('click', (event) => {
 const tabBtns = document.querySelectorAll('.tab-btn');
 
 function switchModule(id) {
+  restoreIsolation();
   currentActiveTab = id;
   tabBtns.forEach((btn) => btn.classList.toggle('active', btn.dataset.tab === id));
   if (kidneyModel) {
@@ -300,21 +489,34 @@ tabBtns.forEach((btn) => btn.addEventListener('click', () => switchModule(btn.da
 
 // --- TOOLBAR IZQUIERDA ---
 const toolBtns = document.querySelectorAll('.tool-btn');
+let activeToolId = 'btn-select';
 
 toolBtns.forEach((btn) => {
   btn.addEventListener('click', () => {
     if (btn.id === 'btn-draw') return;
 
+    if (btn.id !== activeToolId) restoreIsolation();
     setDrawingMode(false);
     toolBtns.forEach((button) => button.classList.remove('active'));
     btn.classList.add('active');
     previousToolButton = btn;
+    activeToolId = btn.id;
 
-    const activeModel = currentActiveTab === '1' ? kidneyModel : nephronModel;
+    if (btn.id === 'btn-highlight') {
+      setCutView(!isCutViewActive);
+      return;
+    }
+
+    const activeModel = getActiveModel();
     if (!activeModel) return;
     const isXray = btn.id === 'btn-xray';
     activeModel.traverse((child) => {
-      if (child.isMesh) child.material.wireframe = isXray;
+      if (child.isMesh) {
+        forEachMaterial(child, (material) => {
+          material.wireframe = isXray;
+          material.needsUpdate = true;
+        });
+      }
     });
   });
 });
