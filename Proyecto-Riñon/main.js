@@ -42,6 +42,23 @@ let kidneyModel = null;
 let nephronModel = null;
 let currentActiveTab = '1';
 let isCutViewActive = false;
+let isXrayActive = false;
+const HIDDEN_OPACITY = 0.08;
+
+// Completar o corregir este mapa cuando el artista entregue la equivalencia
+// semántica de los colores de segmentación. El RGB se obtiene del atributo
+// COLOR_0 del GLB y el valor se muestra directamente en el panel informativo.
+const structureNameByVertexColor = {
+  '255,0,0': 'Corteza renal',
+  '25,255,118': 'Pirámides renales',
+  '255,37,46': 'Arteria renal',
+  '255,0,34': 'Arteria renal',
+  '36,51,255': 'Vena renal',
+  '3,0,255': 'Vena renal',
+  '0,68,255': 'Cálices menores',
+  '255,175,0': 'Pelvis renal',
+  '255,109,16': 'Uréter'
+};
 
 function setupModel(model) {
   model.updateMatrixWorld(true);
@@ -64,6 +81,7 @@ function setupModel(model) {
           material.side = THREE.DoubleSide;
           material.transparent = false;
           material.opacity = 1.0;
+          material.depthWrite = true;
           material.visible = true;
           material.needsUpdate = true;
         });
@@ -89,6 +107,10 @@ function getVertexColorKey(colorAttribute, vertexIndex) {
   return `${red},${green},${blue}`;
 }
 
+function getStructureName(colorKey) {
+  return structureNameByVertexColor[colorKey] || `Región sin clasificar (${colorKey})`;
+}
+
 function splitVertexColorsIntoMaterialGroups(mesh) {
   if (Array.isArray(mesh.material)) return;
 
@@ -109,8 +131,13 @@ function splitVertexColorsIntoMaterialGroups(mesh) {
     );
   }
 
-  // Un color implica que ya no hay regiones distinguibles por material.
-  if (trianglesByColor.size < 2) return;
+  // Aunque solo exista una región, conservar su nombre para el raycast.
+  if (trianglesByColor.size < 2) {
+    const [colorKey] = trianglesByColor.keys();
+    mesh.material.name = getStructureName(colorKey);
+    mesh.material.userData.vertexColorKey = colorKey;
+    return;
+  }
 
   const geometry = sourceGeometry.clone();
   const orderedIndices = new sourceIndex.array.constructor(sourceIndex.count);
@@ -123,7 +150,8 @@ function splitVertexColorsIntoMaterialGroups(mesh) {
     geometry.addGroup(writeOffset, triangleIndices.length, materials.length);
 
     const material = mesh.material.clone();
-    material.name = `Color ${colorKey}`;
+    material.name = getStructureName(colorKey);
+    material.userData.vertexColorKey = colorKey;
     materials.push(material);
     writeOffset += triangleIndices.length;
   }
@@ -133,63 +161,69 @@ function splitVertexColorsIntoMaterialGroups(mesh) {
   mesh.material = materials;
 }
 
-const kidneyPartPaths = [
-  './Models/Arteria.glb',
-  './Models/CALIZ.glb',
-  './Models/corte_rinon.glb',
-  './Models/Piramides_completas.glb',
-  './Models/Piramides_corte.glb',
-  './Models/Rinon_completo.glb',
-  './Models/Vena.glb'
+const kidneyModelPairs = [
+  { id: 'arteria', completo: './Models/Arteria_Completo.glb', corte: './Models/Arteria_Corte.glb' },
+  { id: 'caliz', completo: './Models/Caliz_Completo.glb', corte: './Models/Caliz_Corte.glb' },
+  { id: 'piramide', completo: './Models/Piramide_Completo.glb', corte: './Models/Piramide_Corte.glb' },
+  { id: 'rinon', completo: './Models/Rinon_Completo.glb', corte: './Models/Rinon_Corte.glb' },
+  { id: 'vena', completo: './Models/Vena_Completo.glb', corte: './Models/Vena_Corte.glb' }
 ];
+
+function getFirstMesh(root) {
+  let mesh = null;
+  root.traverse((child) => {
+    if (!mesh && child.isMesh) mesh = child;
+  });
+  return mesh;
+}
+
+function alignCompleteVariant(completePart, cutPart) {
+  const completeMesh = getFirstMesh(completePart);
+  const cutMesh = getFirstMesh(cutPart);
+  if (!completeMesh || !cutMesh) return;
+
+  completePart.updateMatrixWorld(true);
+  cutPart.updateMatrixWorld(true);
+  const completePosition = completeMesh.getWorldPosition(new THREE.Vector3());
+  const cutPosition = cutMesh.getWorldPosition(new THREE.Vector3());
+
+  // Las exportaciones completas conservan un origen distinto de sus pares de
+  // corte. Esta corrección hace que cada par ocupe la misma referencia.
+  completePart.position.add(cutPosition.sub(completePosition));
+}
 
 // La anatomía renal es una única unidad de escena, aunque sus piezas se entreguen
 // en archivos independientes. Así se rota, enfoca y selecciona como un solo riñón.
-Promise.all(kidneyPartPaths.map((path) => loader.loadAsync(path)))
+Promise.all(
+  kidneyModelPairs.flatMap((pair) => [
+    loader.loadAsync(pair.completo),
+    loader.loadAsync(pair.corte)
+  ])
+)
   .then((gltfs) => {
     kidneyModel = new THREE.Group();
     kidneyModel.name = 'Riñón';
-    gltfs.forEach((gltf, index) => {
-      const part = gltf.scene;
-      // Las dos exportaciones de corte sustituyen a las piezas completas.
-      part.userData.isCutVariant = /corte_rinon|Piramides_corte/.test(kidneyPartPaths[index]);
-      part.userData.isDefaultAnatomyPart = /Arteria|CALIZ|Rinon_completo|Vena/.test(
-        kidneyPartPaths[index]
-      );
-      part.userData.isSupportingAnatomyPart = /Arteria|CALIZ|Vena/.test(
-        kidneyPartPaths[index]
-      );
+    kidneyModelPairs.forEach((pair, index) => {
+      const completePart = gltfs[index * 2].scene;
+      const cutPart = gltfs[index * 2 + 1].scene;
+      completePart.userData.variant = 'completo';
+      cutPart.userData.variant = 'corte';
+      completePart.name = `${pair.id}_completo`;
+      cutPart.name = `${pair.id}_corte`;
 
-      if (kidneyPartPaths[index].endsWith('/Rinon_completo.glb')) {
-        // Este GLB fue exportado con un origen diferente al de corte_rinon.
-        // Se usa la traslación de su contraparte cortada para que ambas se
-        // reemplacen exactamente en la misma referencia espacial.
-        part.position.z = -2.8378283977508545;
-      }
-      kidneyModel.add(part);
+      alignCompleteVariant(completePart, cutPart);
+      kidneyModel.add(completePart, cutPart);
     });
-    // La rotación debe afectar todo el conjunto (riñón, cáliz, arteria y vena)
-    // para preservar la anatomía relativa. Se centra después de rotarlo.
+    // Se conserva la orientación común de los modelos entregados.
     kidneyModel.rotation.y = Math.PI;
     setupModel(kidneyModel);
     scene.add(kidneyModel);
     setCutView(isCutViewActive);
+    setXrayMode(isXrayActive);
     kidneyModel.visible = currentActiveTab === '1';
     if (currentActiveTab === '1') focusCameraOn(kidneyModel);
   })
   .catch((err) => console.error('❌ Error al cargar las piezas del riñón:', err));
-
-loader.loadAsync('./Models/Nefrona.glb')
-  .then((gltf) => {
-    nephronModel = gltf.scene;
-    setupModel(nephronModel);
-    scene.add(nephronModel);
-    const box = new THREE.Box3().setFromObject(nephronModel);
-    console.log('📐 Tamaño de la nefrona cargada:', box.getSize(new THREE.Vector3()));
-    nephronModel.visible = currentActiveTab === '2' || currentActiveTab === '3';
-    if (currentActiveTab === '2' || currentActiveTab === '3') focusCameraOn(nephronModel);
-  })
-  .catch((err) => console.error('❌ Error al cargar /Models/Nefrona.glb:', err));
 
 function focusCameraOn(model) {
   if (!model) return;
@@ -374,6 +408,15 @@ function getActiveModel() {
   return currentActiveTab === '1' ? kidneyModel : nephronModel;
 }
 
+function isVisibleInHierarchy(object) {
+  let current = object;
+  while (current) {
+    if (!current.visible) return false;
+    current = current.parent;
+  }
+  return true;
+}
+
 function restoreIsolation() {
   if (!isolatedModel) return;
   isolatedModel.traverse((child) => {
@@ -381,6 +424,11 @@ function restoreIsolation() {
       child.visible = true;
       forEachMaterial(child, (material) => {
         material.visible = true;
+        const isManuallyHidden = material.userData.atlasHidden === true;
+        material.transparent = isManuallyHidden;
+        material.opacity = isManuallyHidden ? HIDDEN_OPACITY : 1.0;
+        material.depthWrite = !isManuallyHidden;
+        material.userData.isolationDimmed = false;
         material.needsUpdate = true;
       });
     }
@@ -407,7 +455,14 @@ function isolateMaterial(model, mesh, materialIndex = 0) {
     if (child.isMesh) {
       child.visible = true;
       forEachMaterial(child, (material) => {
-        material.visible = material === selectedMaterial;
+        const isSelected = material === selectedMaterial;
+        // Aislar conserva el contexto anatómico: la región elegida queda opaca
+        // y el resto se atenúa, en vez de desaparecer físicamente.
+        material.visible = true;
+        material.transparent = !isSelected;
+        material.opacity = isSelected ? 1.0 : HIDDEN_OPACITY;
+        material.depthWrite = isSelected;
+        material.userData.isolationDimmed = !isSelected;
         material.needsUpdate = true;
       });
     }
@@ -418,15 +473,53 @@ function isolateMaterial(model, mesh, materialIndex = 0) {
 
 function setCutView(enabled) {
   isCutViewActive = enabled;
+  updateCutOnlyTools();
   if (!kidneyModel) return;
 
   kidneyModel.children.forEach((part) => {
-    // La vista normal contiene solo el riñón completo, vasos y cáliz. El corte
-    // sustituye el riñón por sus versiones cortadas y mantiene sus conexiones.
-    part.visible = enabled
-      ? part.userData.isCutVariant === true || part.userData.isSupportingAnatomyPart === true
-      : part.userData.isDefaultAnatomyPart === true;
+    // Cada modelo nuevo tiene una variante _Completo y una _Corte. El corte
+    // reemplaza todas las variantes completas por su par correspondiente.
+    part.visible = part.userData.variant === (enabled ? 'corte' : 'completo');
   });
+  if (!enabled) {
+    restoreIsolation();
+    if (activeToolId === 'btn-isolate' || activeToolId === 'btn-hide') {
+      document.querySelectorAll('.tool-btn').forEach((button) => button.classList.remove('active'));
+      const selectButton = document.querySelector('#btn-select');
+      selectButton.classList.add('active');
+      previousToolButton = selectButton;
+      activeToolId = 'btn-select';
+    }
+  }
+}
+
+function updateCutOnlyTools() {
+  ['btn-isolate', 'btn-hide'].forEach((id) => {
+    const button = document.querySelector(`#${id}`);
+    const locked = !isCutViewActive;
+    button.classList.toggle('requires-cut', locked);
+    button.setAttribute('aria-disabled', String(locked));
+    button.title = locked
+      ? 'Activa el corte para usar esta herramienta.'
+      : '';
+  });
+}
+
+function setXrayMode(enabled) {
+  isXrayActive = enabled;
+  if (kidneyModel) {
+    kidneyModel.traverse((child) => {
+      if (child.isMesh) {
+        forEachMaterial(child, (material) => {
+          material.wireframe = enabled;
+          material.needsUpdate = true;
+        });
+      }
+    });
+  }
+  const xrayButton = document.querySelector('#btn-xray');
+  xrayButton.classList.toggle('xray-enabled', enabled);
+  xrayButton.setAttribute('aria-pressed', String(enabled));
 }
 
 function toggleMaterialTransparency(mesh, materialIndex = 0) {
@@ -436,7 +529,8 @@ function toggleMaterialTransparency(mesh, materialIndex = 0) {
 
   const makeTransparent = material.userData.atlasHidden !== true;
   material.transparent = makeTransparent;
-  material.opacity = makeTransparent ? 0.25 : 1.0;
+  material.opacity = makeTransparent ? HIDDEN_OPACITY : 1.0;
+  material.depthWrite = !makeTransparent;
   material.userData.atlasHidden = makeTransparent;
   material.needsUpdate = true;
 }
@@ -449,21 +543,33 @@ canvas.addEventListener('click', (event) => {
   mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
   raycaster.setFromCamera(mouse, camera);
   const intersects = raycaster.intersectObjects(activeModel.children, true);
+  const activeToolId = document.querySelector('.tool-btn.active')?.id;
   const hit = intersects.find(({ object, face }) => {
+    // Raycaster puede devolver geometría de una variante _Completo aunque su
+    // padre esté oculto por la vista de corte. Esos impactos no son interactivos.
+    if (!isVisibleInHierarchy(object)) return false;
     const materials = Array.isArray(object.material) ? object.material : [object.material];
-    return materials[face?.materialIndex ?? 0]?.visible !== false;
+    const material = materials[face?.materialIndex ?? 0];
+    if (!material || material.visible === false) return false;
+    // Durante el aislamiento ignoramos las regiones atenuadas para que un
+    // segundo clic alcance siempre la región que debe restaurar la vista.
+    return activeToolId !== 'btn-isolate' || !isolatedModel || material === isolatedMaterial;
   });
   if (hit) {
     const selectedObject = hit.object;
+    const materialIndex = hit.face?.materialIndex ?? 0;
+    const materials = Array.isArray(selectedObject.material)
+      ? selectedObject.material
+      : [selectedObject.material];
+    const selectedMaterial = materials[materialIndex];
     document.querySelector('#structure-title').innerText =
-      selectedObject.name || 'Estructura seleccionada';
+      selectedMaterial?.name || selectedObject.name || 'Estructura seleccionada';
 
-    const activeToolId = document.querySelector('.tool-btn.active')?.id;
     if (activeToolId === 'btn-isolate') {
-      isolateMaterial(activeModel, selectedObject, hit.face?.materialIndex ?? 0);
+      isolateMaterial(activeModel, selectedObject, materialIndex);
     }
     if (activeToolId === 'btn-hide') {
-      toggleMaterialTransparency(selectedObject, hit.face?.materialIndex ?? 0);
+      toggleMaterialTransparency(selectedObject, materialIndex);
     }
   }
 });
@@ -490,10 +596,17 @@ tabBtns.forEach((btn) => btn.addEventListener('click', () => switchModule(btn.da
 // --- TOOLBAR IZQUIERDA ---
 const toolBtns = document.querySelectorAll('.tool-btn');
 let activeToolId = 'btn-select';
+updateCutOnlyTools();
 
 toolBtns.forEach((btn) => {
   btn.addEventListener('click', () => {
     if (btn.id === 'btn-draw') return;
+    if (btn.classList.contains('requires-cut')) return;
+
+    if (btn.id === 'btn-xray') {
+      setXrayMode(!isXrayActive);
+      return;
+    }
 
     if (btn.id !== activeToolId) restoreIsolation();
     setDrawingMode(false);
@@ -506,18 +619,6 @@ toolBtns.forEach((btn) => {
       setCutView(!isCutViewActive);
       return;
     }
-
-    const activeModel = getActiveModel();
-    if (!activeModel) return;
-    const isXray = btn.id === 'btn-xray';
-    activeModel.traverse((child) => {
-      if (child.isMesh) {
-        forEachMaterial(child, (material) => {
-          material.wireframe = isXray;
-          material.needsUpdate = true;
-        });
-      }
-    });
   });
 });
 
