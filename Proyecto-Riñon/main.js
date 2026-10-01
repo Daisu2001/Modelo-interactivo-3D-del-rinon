@@ -42,8 +42,10 @@ let nephronModel = null;
 let currentActiveTab = '1';
 let isCutViewActive = false;
 let isXrayActive = false;
+let nephronFlow = null;
 const HIDDEN_OPACITY = 0.08;
 const loader = new GLTFLoader();
+const nephronFlowClock = new THREE.Clock();
 
 // Completar o corregir este mapa cuando el artista entregue la equivalencia
 // semántica de los colores de segmentación. El RGB se obtiene del atributo
@@ -192,6 +194,63 @@ function alignCompleteVariant(completePart, cutPart) {
   completePart.position.add(cutPosition.sub(completePosition));
 }
 
+function createNephronFlow(model) {
+  const mesh = getFirstMesh(model);
+  if (!mesh) return null;
+
+  const centerline = new THREE.CatmullRomCurve3([
+    new THREE.Vector3(-0.017, -0.017, 0.22),
+    new THREE.Vector3(-0.017, -0.017, 0.14),
+    new THREE.Vector3(-0.017, -0.017, 0.04),
+    new THREE.Vector3(-0.017, -0.017, -0.08),
+    new THREE.Vector3(-0.017, -0.017, -0.19),
+    new THREE.Vector3(-0.015, -0.017, -0.25),
+    new THREE.Vector3(-0.008, -0.017, -0.278),
+    new THREE.Vector3(0.003, -0.017, -0.28),
+    new THREE.Vector3(0.008, -0.017, -0.25),
+    new THREE.Vector3(0.008, -0.017, -0.16),
+    new THREE.Vector3(0.008, -0.017, -0.04),
+    new THREE.Vector3(0.008, -0.017, 0.08),
+    new THREE.Vector3(0.008, -0.017, 0.19),
+    new THREE.Vector3(0.004, -0.017, 0.235),
+    new THREE.Vector3(-0.006, -0.017, 0.25),
+    new THREE.Vector3(-0.015, -0.017, 0.235)
+  ], true, 'centripetal');
+  const flowGroup = new THREE.Group();
+  flowGroup.name = 'Flujo tubular';
+
+  const fluidCore = new THREE.Mesh(
+    new THREE.TubeGeometry(centerline, 220, 0.0018, 6, true),
+    new THREE.MeshBasicMaterial({
+      color: 0xc95724,
+      transparent: true,
+      opacity: 0.75,
+      depthTest: false,
+      depthWrite: false
+    })
+  );
+  fluidCore.renderOrder = 5;
+  fluidCore.raycast = () => {};
+  flowGroup.add(fluidCore);
+
+  const particleGeometry = new THREE.SphereGeometry(0.0032, 12, 8);
+  const particleMaterial = new THREE.MeshBasicMaterial({
+    color: 0xff922e,
+    depthTest: false,
+    depthWrite: false
+  });
+  const particles = Array.from({ length: 18 }, () => {
+    const particle = new THREE.Mesh(particleGeometry, particleMaterial);
+    particle.renderOrder = 6;
+    particle.raycast = () => {};
+    flowGroup.add(particle);
+    return particle;
+  });
+
+  mesh.add(flowGroup);
+  return { centerline, particles, duration: 24 };
+}
+
 // La anatomía renal es una única unidad de escena, aunque sus piezas se entreguen
 // en archivos independientes. Así se rota, enfoca y selecciona como un solo riñón.
 Promise.all(
@@ -226,16 +285,18 @@ Promise.all(
   .catch((err) => console.error('❌ Error al cargar las piezas del riñón:', err));
 
 loader.load(
-  './Models/nefrona.glb',
+  './Models/nefrona%20(1).glb',
   (gltf) => {
     nephronModel = gltf.scene;
     setupModel(nephronModel);
+    nephronFlow = createNephronFlow(nephronModel);
     scene.add(nephronModel);
+    setXrayMode(isXrayActive);
     nephronModel.visible = currentActiveTab === '2' || currentActiveTab === '3';
     if (nephronModel.visible) focusCameraOn(nephronModel);
   },
   undefined,
-  (err) => console.error('❌ Error al cargar ./Models/nefrona.glb:', err)
+  (err) => console.error('❌ Error al cargar ./Models/nefrona (1).glb:', err)
 );
 
 function focusCameraOn(model) {
@@ -909,6 +970,13 @@ function animate() {
   requestAnimationFrame(animate);
   resizeCanvas();
   controls.update();
+  if (nephronFlow) {
+    const progress = (nephronFlowClock.getElapsedTime() / nephronFlow.duration) % 1;
+    nephronFlow.particles.forEach((particle, index) => {
+      const position = (progress + index / nephronFlow.particles.length) % 1;
+      particle.position.copy(nephronFlow.centerline.getPointAt(position));
+    });
+  }
   renderer.render(scene, camera);
 }
 
