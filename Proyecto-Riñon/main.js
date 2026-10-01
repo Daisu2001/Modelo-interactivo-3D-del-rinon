@@ -40,6 +40,27 @@ controls.dampingFactor = 0.05;
 let kidneyModel = null;
 let nephronModel = null;
 let currentActiveTab = '1';
+let isCutViewActive = false;
+let isXrayActive = false;
+let nephronFlow = null;
+const HIDDEN_OPACITY = 0.08;
+const loader = new GLTFLoader();
+const nephronFlowClock = new THREE.Clock();
+
+// Completar o corregir este mapa cuando el artista entregue la equivalencia
+// semántica de los colores de segmentación. El RGB se obtiene del atributo
+// COLOR_0 del GLB y el valor se muestra directamente en el panel informativo.
+const structureNameByVertexColor = {
+  '255,0,0': 'Corteza renal',
+  '25,255,118': 'Pirámides renales',
+  '255,37,46': 'Arteria renal',
+  '255,0,34': 'Arteria renal',
+  '36,51,255': 'Vena renal',
+  '3,0,255': 'Vena renal',
+  '0,68,255': 'Cálices menores',
+  '255,175,0': 'Pelvis renal',
+  '255,109,16': 'Uréter'
+};
 
 function setupModel(model) {
   model.updateMatrixWorld(true);
@@ -51,46 +72,231 @@ function setupModel(model) {
 
   model.traverse((child) => {
     if (child.isMesh) {
+      // Los GLB comparten materiales entre meshes con frecuencia. Clonarlos aquí
+      // evita que ocultar una pieza cambie accidentalmente otra que usa el mismo material.
       if (child.material) {
-        child.material.side = THREE.DoubleSide;
-        child.material.transparent = false;
-        child.material.opacity = 1.0;
+        child.material = Array.isArray(child.material)
+          ? child.material.map((material) => material.clone())
+          : child.material.clone();
+        splitVertexColorsIntoMaterialGroups(child);
+        forEachMaterial(child, (material) => {
+          material.side = THREE.DoubleSide;
+          material.transparent = false;
+          material.opacity = 1.0;
+          material.depthWrite = true;
+          material.visible = true;
+          material.needsUpdate = true;
+        });
       }
       child.visible = true;
     }
   });
 }
 
-// Cargar modelos
-const loader = new GLTFLoader();
+function forEachMaterial(mesh, callback) {
+  if (!mesh.material) return;
+  const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+  materials.forEach(callback);
+}
 
-loader.load(
-  './Models/Kidney.glb',
-  (gltf) => {
-    kidneyModel = gltf.scene;
+function getVertexColorKey(colorAttribute, vertexIndex) {
+  // Los GLB de vasos se exportaron con identificadores de color por vértice,
+  // pero sin slots de materiales. Cuantizar evita separar caras que comparten
+  // visualmente el mismo color por pequeñas diferencias de coma flotante.
+  const red = Math.round(colorAttribute.getX(vertexIndex) * 255);
+  const green = Math.round(colorAttribute.getY(vertexIndex) * 255);
+  const blue = Math.round(colorAttribute.getZ(vertexIndex) * 255);
+  return `${red},${green},${blue}`;
+}
+
+function getStructureName(colorKey) {
+  return structureNameByVertexColor[colorKey] || `Región sin clasificar (${colorKey})`;
+}
+
+function splitVertexColorsIntoMaterialGroups(mesh) {
+  if (Array.isArray(mesh.material)) return;
+
+  const sourceGeometry = mesh.geometry;
+  const colorAttribute = sourceGeometry.getAttribute('color');
+  const sourceIndex = sourceGeometry.getIndex();
+  if (!colorAttribute || !sourceIndex || sourceIndex.count % 3 !== 0) return;
+
+  const trianglesByColor = new Map();
+  for (let offset = 0; offset < sourceIndex.count; offset += 3) {
+    const vertexIndex = sourceIndex.getX(offset);
+    const colorKey = getVertexColorKey(colorAttribute, vertexIndex);
+    if (!trianglesByColor.has(colorKey)) trianglesByColor.set(colorKey, []);
+    trianglesByColor.get(colorKey).push(
+      vertexIndex,
+      sourceIndex.getX(offset + 1),
+      sourceIndex.getX(offset + 2)
+    );
+  }
+
+  // Aunque solo exista una región, conservar su nombre para el raycast.
+  if (trianglesByColor.size < 2) {
+    const [colorKey] = trianglesByColor.keys();
+    mesh.material.name = getStructureName(colorKey);
+    mesh.material.userData.vertexColorKey = colorKey;
+    return;
+  }
+
+  const geometry = sourceGeometry.clone();
+  const orderedIndices = new sourceIndex.array.constructor(sourceIndex.count);
+  const materials = [];
+  let writeOffset = 0;
+
+  geometry.clearGroups();
+  for (const [colorKey, triangleIndices] of trianglesByColor) {
+    orderedIndices.set(triangleIndices, writeOffset);
+    geometry.addGroup(writeOffset, triangleIndices.length, materials.length);
+
+    const material = mesh.material.clone();
+    material.name = getStructureName(colorKey);
+    material.userData.vertexColorKey = colorKey;
+    materials.push(material);
+    writeOffset += triangleIndices.length;
+  }
+
+  geometry.setIndex(new THREE.BufferAttribute(orderedIndices, 1));
+  mesh.geometry = geometry;
+  mesh.material = materials;
+}
+
+const kidneyModelPairs = [
+  { id: 'arteria', completo: './Models/Arteria_Completo.glb', corte: './Models/Arteria_Corte.glb' },
+  { id: 'caliz', completo: './Models/Caliz_Completo.glb', corte: './Models/Caliz_Corte.glb' },
+  { id: 'piramide', completo: './Models/Piramide_Completo.glb', corte: './Models/Piramide_Corte.glb' },
+  { id: 'rinon', completo: './Models/Rinon_completo.glb', corte: './Models/Rinon_Corte.glb' },
+  { id: 'vena', completo: './Models/Vena_Completo.glb', corte: './Models/Vena_Corte.glb' }
+];
+
+function getFirstMesh(root) {
+  let mesh = null;
+  root.traverse((child) => {
+    if (!mesh && child.isMesh) mesh = child;
+  });
+  return mesh;
+}
+
+function alignCompleteVariant(completePart, cutPart) {
+  const completeMesh = getFirstMesh(completePart);
+  const cutMesh = getFirstMesh(cutPart);
+  if (!completeMesh || !cutMesh) return;
+
+  completePart.updateMatrixWorld(true);
+  cutPart.updateMatrixWorld(true);
+  const completePosition = completeMesh.getWorldPosition(new THREE.Vector3());
+  const cutPosition = cutMesh.getWorldPosition(new THREE.Vector3());
+
+  // Las exportaciones completas conservan un origen distinto de sus pares de
+  // corte. Esta corrección hace que cada par ocupe la misma referencia.
+  completePart.position.add(cutPosition.sub(completePosition));
+}
+
+function createNephronFlow(model) {
+  const mesh = getFirstMesh(model);
+  if (!mesh) return null;
+
+  const centerline = new THREE.CatmullRomCurve3([
+    new THREE.Vector3(-0.017, -0.017, 0.22),
+    new THREE.Vector3(-0.017, -0.017, 0.14),
+    new THREE.Vector3(-0.017, -0.017, 0.04),
+    new THREE.Vector3(-0.017, -0.017, -0.08),
+    new THREE.Vector3(-0.017, -0.017, -0.19),
+    new THREE.Vector3(-0.015, -0.017, -0.25),
+    new THREE.Vector3(-0.008, -0.017, -0.278),
+    new THREE.Vector3(0.003, -0.017, -0.28),
+    new THREE.Vector3(0.008, -0.017, -0.25),
+    new THREE.Vector3(0.008, -0.017, -0.16),
+    new THREE.Vector3(0.008, -0.017, -0.04),
+    new THREE.Vector3(0.008, -0.017, 0.08),
+    new THREE.Vector3(0.008, -0.017, 0.19),
+    new THREE.Vector3(0.004, -0.017, 0.235),
+    new THREE.Vector3(-0.006, -0.017, 0.25),
+    new THREE.Vector3(-0.015, -0.017, 0.235)
+  ], true, 'centripetal');
+  const flowGroup = new THREE.Group();
+  flowGroup.name = 'Flujo tubular';
+
+  const fluidCore = new THREE.Mesh(
+    new THREE.TubeGeometry(centerline, 220, 0.0018, 6, true),
+    new THREE.MeshBasicMaterial({
+      color: 0xc95724,
+      transparent: true,
+      opacity: 0.75,
+      depthTest: false,
+      depthWrite: false
+    })
+  );
+  fluidCore.renderOrder = 5;
+  fluidCore.raycast = () => {};
+  flowGroup.add(fluidCore);
+
+  const particleGeometry = new THREE.SphereGeometry(0.0032, 12, 8);
+  const particleMaterial = new THREE.MeshBasicMaterial({
+    color: 0xff922e,
+    depthTest: false,
+    depthWrite: false
+  });
+  const particles = Array.from({ length: 18 }, () => {
+    const particle = new THREE.Mesh(particleGeometry, particleMaterial);
+    particle.renderOrder = 6;
+    particle.raycast = () => {};
+    flowGroup.add(particle);
+    return particle;
+  });
+
+  mesh.add(flowGroup);
+  return { centerline, particles, duration: 24 };
+}
+
+// La anatomía renal es una única unidad de escena, aunque sus piezas se entreguen
+// en archivos independientes. Así se rota, enfoca y selecciona como un solo riñón.
+Promise.all(
+  kidneyModelPairs.flatMap((pair) => [
+    loader.loadAsync(pair.completo),
+    loader.loadAsync(pair.corte)
+  ])
+)
+  .then((gltfs) => {
+    kidneyModel = new THREE.Group();
+    kidneyModel.name = 'Riñón';
+    kidneyModelPairs.forEach((pair, index) => {
+      const completePart = gltfs[index * 2].scene;
+      const cutPart = gltfs[index * 2 + 1].scene;
+      completePart.userData.variant = 'completo';
+      cutPart.userData.variant = 'corte';
+      completePart.name = `${pair.id}_completo`;
+      cutPart.name = `${pair.id}_corte`;
+
+      alignCompleteVariant(completePart, cutPart);
+      kidneyModel.add(completePart, cutPart);
+    });
+    // Se conserva la orientación común de los modelos entregados.
+    kidneyModel.rotation.y = Math.PI;
     setupModel(kidneyModel);
     scene.add(kidneyModel);
+    setCutView(isCutViewActive);
+    setXrayMode(isXrayActive);
     kidneyModel.visible = currentActiveTab === '1';
     if (currentActiveTab === '1') focusCameraOn(kidneyModel);
-  },
-  undefined,
-  (err) => console.error('❌ Error al cargar /Models/Kidney.glb:', err)
-);
+  })
+  .catch((err) => console.error('❌ Error al cargar las piezas del riñón:', err));
 
 loader.load(
-  './Models/nefrona.glb',
+  './Models/nefrona%20(1).glb',
   (gltf) => {
     nephronModel = gltf.scene;
     setupModel(nephronModel);
+    nephronFlow = createNephronFlow(nephronModel);
     scene.add(nephronModel);
-    const box = new THREE.Box3().setFromObject(nephronModel);
-    const size = box.getSize(new THREE.Vector3());
-    console.log('📐 Tamaño de la nefrona cargada:', size);
+    setXrayMode(isXrayActive);
     nephronModel.visible = currentActiveTab === '2' || currentActiveTab === '3';
-    if (currentActiveTab === '2' || currentActiveTab === '3') focusCameraOn(nephronModel);
+    if (nephronModel.visible) focusCameraOn(nephronModel);
   },
   undefined,
-  (err) => console.error('❌ Error al cargar /Models/nefrona.glb:', err)
+  (err) => console.error('❌ Error al cargar ./Models/nefrona (1).glb:', err)
 );
 
 function focusCameraOn(model) {
@@ -181,6 +387,9 @@ function getNormalizedPoint(event) {
 function setDrawingMode(enabled) {
   drawingMode = enabled;
   if (enabled) {
+    // Dibujar sustituye la herramienta activa; una pieza aislada no debe quedar
+    // oculta cuando el usuario vuelva a la escena.
+    restoreIsolation();
     previousToolButton =
       document.querySelector('.tool-btn.active:not(#btn-draw)') || previousToolButton;
     document.querySelectorAll('.tool-btn').forEach((button) => button.classList.remove('active'));
@@ -266,20 +475,177 @@ function resizeCanvas() {
 // --- RAYCASTER (SELECCIÓN AL HACER CLIC) ---
 const raycaster = new THREE.Raycaster();
 const mouse = new THREE.Vector2();
+let isolatedMaterial = null;
+let isolatedModel = null;
+
+function getActiveModel() {
+  return currentActiveTab === '1' ? kidneyModel : nephronModel;
+}
+
+function isVisibleInHierarchy(object) {
+  let current = object;
+  while (current) {
+    if (!current.visible) return false;
+    current = current.parent;
+  }
+  return true;
+}
+
+function restoreIsolation() {
+  if (!isolatedModel) return;
+  isolatedModel.traverse((child) => {
+    if (child.isMesh) {
+      child.visible = true;
+      forEachMaterial(child, (material) => {
+        material.visible = true;
+        const isManuallyHidden = material.userData.atlasHidden === true;
+        material.transparent = isManuallyHidden;
+        material.opacity = isManuallyHidden ? HIDDEN_OPACITY : 1.0;
+        material.depthWrite = !isManuallyHidden;
+        material.userData.isolationDimmed = false;
+        material.needsUpdate = true;
+      });
+    }
+  });
+  isolatedMaterial = null;
+  isolatedModel = null;
+}
+
+function isolateMaterial(model, mesh, materialIndex = 0) {
+  const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+  const selectedMaterial = materials[materialIndex];
+  if (!selectedMaterial) return;
+
+  if (isolatedMaterial === selectedMaterial && isolatedModel === model) {
+    restoreIsolation();
+    return;
+  }
+
+  // Mientras haya un material aislado, ningún otro clic puede cambiar la
+  // selección. La restauración ocurre exclusivamente al repetir el clic
+  // sobre ese mismo material (o al cambiar de herramienta).
+  if (isolatedModel) return;
+  model.traverse((child) => {
+    if (child.isMesh) {
+      child.visible = true;
+      forEachMaterial(child, (material) => {
+        const isSelected = material === selectedMaterial;
+        // Aislar conserva el contexto anatómico: la región elegida queda opaca
+        // y el resto se atenúa, en vez de desaparecer físicamente.
+        material.visible = true;
+        material.transparent = !isSelected;
+        material.opacity = isSelected ? 1.0 : HIDDEN_OPACITY;
+        material.depthWrite = isSelected;
+        material.userData.isolationDimmed = !isSelected;
+        material.needsUpdate = true;
+      });
+    }
+  });
+  isolatedMaterial = selectedMaterial;
+  isolatedModel = model;
+}
+
+function setCutView(enabled) {
+  isCutViewActive = enabled;
+  updateCutOnlyTools();
+  if (!kidneyModel) return;
+
+  kidneyModel.children.forEach((part) => {
+    // Cada modelo nuevo tiene una variante _Completo y una _Corte. El corte
+    // reemplaza todas las variantes completas por su par correspondiente.
+    part.visible = part.userData.variant === (enabled ? 'corte' : 'completo');
+  });
+  if (!enabled) {
+    restoreIsolation();
+    if (activeToolId === 'btn-isolate' || activeToolId === 'btn-hide') {
+      document.querySelectorAll('.tool-btn').forEach((button) => button.classList.remove('active'));
+      const selectButton = document.querySelector('#btn-select');
+      selectButton.classList.add('active');
+      previousToolButton = selectButton;
+      activeToolId = 'btn-select';
+    }
+  }
+}
+
+function updateCutOnlyTools() {
+  ['btn-isolate', 'btn-hide'].forEach((id) => {
+    const button = document.querySelector(`#${id}`);
+    const locked = !isCutViewActive;
+    button.classList.toggle('requires-cut', locked);
+    button.setAttribute('aria-disabled', String(locked));
+    button.title = locked
+      ? 'Activa el corte para usar esta herramienta.'
+      : '';
+  });
+}
+
+function setXrayMode(enabled) {
+  isXrayActive = enabled;
+  [kidneyModel, nephronModel].forEach((model) => {
+    if (model) {
+      model.traverse((child) => {
+        if (child.isMesh) {
+          forEachMaterial(child, (material) => {
+            material.wireframe = enabled;
+            material.needsUpdate = true;
+          });
+        }
+      });
+    }
+  });
+  const xrayButton = document.querySelector('#btn-xray');
+  xrayButton.classList.toggle('xray-enabled', enabled);
+  xrayButton.setAttribute('aria-pressed', String(enabled));
+}
+
+function toggleMaterialTransparency(mesh, materialIndex = 0) {
+  const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+  const material = materials[materialIndex];
+  if (!material) return;
+
+  const makeTransparent = material.userData.atlasHidden !== true;
+  material.transparent = makeTransparent;
+  material.opacity = makeTransparent ? HIDDEN_OPACITY : 1.0;
+  material.depthWrite = !makeTransparent;
+  material.userData.atlasHidden = makeTransparent;
+  material.needsUpdate = true;
+}
 
 canvas.addEventListener('click', (event) => {
-  const activeModel = currentActiveTab === '1' ? kidneyModel : nephronModel;
+  const activeModel = getActiveModel();
   if (!activeModel) return;
   const rect = canvas.getBoundingClientRect();
   mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
   mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
   raycaster.setFromCamera(mouse, camera);
   const intersects = raycaster.intersectObjects(activeModel.children, true);
-  if (intersects.length > 0) {
-    const selectedObject = intersects[0].object;
-    const structureTitle = document.querySelector('#structure-title');
-    if (structureTitle) {
-      structureTitle.innerText = selectedObject.name || 'Estructura seleccionada';
+  const activeToolId = document.querySelector('.tool-btn.active')?.id;
+  const hit = intersects.find(({ object, face }) => {
+    // Raycaster puede devolver geometría de una variante _Completo aunque su
+    // padre esté oculto por la vista de corte. Esos impactos no son interactivos.
+    if (!isVisibleInHierarchy(object)) return false;
+    const materials = Array.isArray(object.material) ? object.material : [object.material];
+    const material = materials[face?.materialIndex ?? 0];
+    if (!material || material.visible === false) return false;
+    // Durante el aislamiento ignoramos las regiones atenuadas para que un
+    // segundo clic alcance siempre la región que debe restaurar la vista.
+    return activeToolId !== 'btn-isolate' || !isolatedModel || material === isolatedMaterial;
+  });
+  if (hit) {
+    const selectedObject = hit.object;
+    const materialIndex = hit.face?.materialIndex ?? 0;
+    const materials = Array.isArray(selectedObject.material)
+      ? selectedObject.material
+      : [selectedObject.material];
+    const selectedMaterial = materials[materialIndex];
+    document.querySelector('#structure-title').innerText =
+      selectedMaterial?.name || selectedObject.name || 'Estructura seleccionada';
+
+    if (activeToolId === 'btn-isolate') {
+      isolateMaterial(activeModel, selectedObject, materialIndex);
+    }
+    if (activeToolId === 'btn-hide') {
+      toggleMaterialTransparency(selectedObject, materialIndex);
     }
   }
 });
@@ -320,17 +686,18 @@ function initFormulas() {
   const valPglu = document.querySelector('#val-pglu');
   const valTfg = document.querySelector('#val-tfg');
   const valTmg = document.querySelector('#val-tmg');
-  const resFl = document.querySelector('#res-fl');
-  const resReab = document.querySelector('#res-reab');
-  const resExc = document.querySelector('#res-exc');
-  const resFe = document.querySelector('#res-fe');
-  const fillSglt2 = document.querySelector('#fill-sglt2');
+  const resFl = document.querySelector('#res-fglu');
+  const resReab = document.querySelector('#res-rglu');
+  const resExc = document.querySelector('#res-eglu');
+  const resFe = document.querySelector('#res-feglu');
+  const fillSglt2 = document.querySelector('#sglt2-bar');
   const fillSglt1 = document.querySelector('#fill-sglt1');
   const pctSglt2 = document.querySelector('#pct-sglt2');
   const pctSglt1 = document.querySelector('#pct-sglt1');
   const glucoseClinicalState = document.querySelector('#glucose-clinical-state');
   const glucoseStatusTag = document.querySelector('#glucose-status-tag');
   const glucoseStatusText = document.querySelector('#glucose-status-text');
+  const thresholdFraction = 0.72;
 
   function calculateGlucoseFormulas() {
     if (!sliderPglu || !sliderTfg || !sliderTmg) return;
@@ -343,7 +710,6 @@ function initFormulas() {
     const cargaFiltrada = (pglu * tfg) / 100;
 
     // Umbral renal real con fenómeno de splay (~180 mg/dL a TFG normal)
-    const thresholdFraction = 0.72;
     const splayStart = tmg * thresholdFraction;
 
     let reabsorcion = 0;
@@ -391,7 +757,6 @@ function initFormulas() {
       }
       if (glucoseStatusTag) {
         glucoseStatusTag.className = 'clinical-status-tag normal';
-        glucoseStatusTag.innerText = 'Reabsorción Completa (100%)';
       }
       if (glucoseStatusText) {
         glucoseStatusText.innerText = 'La carga filtrada está dentro del rango fisiológico normal. Toda la glucosa se reabsorbe por SGLT2 y SGLT1 sin glucosuria.';
@@ -403,10 +768,9 @@ function initFormulas() {
       }
       if (glucoseStatusTag) {
         glucoseStatusTag.className = 'clinical-status-tag warning';
-        glucoseStatusTag.innerText = 'Superación de Umbral Renal';
       }
       if (glucoseStatusText) {
-        glucoseStatusText.innerText = 'Glucemia plasmática supera el umbral de saturación renal (~180 mg/dL). Aparecen trazas de glucosa en la orina final.';
+        glucoseStatusText.innerText = `Glucemia plasmática supera el umbral de saturación renal (~${Math.round((splayStart * 100) / tfg)} mg/dL). Aparecen trazas de glucosa en la orina final.`;
       }
     } else {
       if (glucoseClinicalState) {
@@ -415,50 +779,47 @@ function initFormulas() {
       }
       if (glucoseStatusTag) {
         glucoseStatusTag.className = 'clinical-status-tag danger';
-        glucoseStatusTag.innerText = 'Saturación Completa TmG';
       }
       if (glucoseStatusText) {
-        glucoseStatusText.innerText = 'Saturación total de transportadores SGLT2/SGLT1 (>375 mg/min). Toda glucosa adicional filtrada se excreta, provocando diuresis osmótica.';
+        glucoseStatusText.innerText = 'Saturación total de transportadores SGLT2/SGLT1 (>210 mg/min). Toda glucosa adicional filtrada se excreta, provocando diuresis osmótica.';
       }
     }
   }
 
-  sliderPglu?.addEventListener('input', calculateGlucoseFormulas);
-  sliderTfg?.addEventListener('input', calculateGlucoseFormulas);
-  sliderTmg?.addEventListener('input', calculateGlucoseFormulas);
+  function handleGlucoseInput() {
+    document.querySelectorAll('.preset-pill').forEach((button) => button.classList.remove('active'));
+    calculateGlucoseFormulas();
+  }
+
+  sliderPglu?.addEventListener('input', handleGlucoseInput);
+  sliderTfg?.addEventListener('input', handleGlucoseInput);
+  sliderTmg?.addEventListener('input', handleGlucoseInput);
 
   // Presets clínicos de Glucosa
-  const presetNormal = document.querySelector('#preset-normal');
-  const presetThreshold = document.querySelector('#preset-threshold');
-  const presetDiabetes = document.querySelector('#preset-diabetes');
-  const presetSglt2i = document.querySelector('#preset-sglt2i');
+  const glucosePresets = {
+    normal: { pglu: '90', tfg: '125', tmg: '205' },
+    threshold: { pglu: null, tfg: '125', tmg: '205' },
+    glucosuria: { pglu: '240', tfg: '125', tmg: '205' },
+    tmg: { pglu: '100', tfg: '125', tmg: '210' }
+  };
 
-  presetNormal?.addEventListener('click', () => {
-    if (sliderPglu) sliderPglu.value = '100';
-    if (sliderTfg) sliderTfg.value = '125';
-    if (sliderTmg) sliderTmg.value = '375';
-    calculateGlucoseFormulas();
-  });
+  document.querySelectorAll('.preset-pill[data-preset]').forEach((button) => {
+    button.addEventListener('click', () => {
+      const preset = glucosePresets[button.dataset.preset];
+      if (!preset) return;
 
-  presetThreshold?.addEventListener('click', () => {
-    if (sliderPglu) sliderPglu.value = '200';
-    if (sliderTfg) sliderTfg.value = '125';
-    if (sliderTmg) sliderTmg.value = '375';
-    calculateGlucoseFormulas();
-  });
-
-  presetDiabetes?.addEventListener('click', () => {
-    if (sliderPglu) sliderPglu.value = '320';
-    if (sliderTfg) sliderTfg.value = '125';
-    if (sliderTmg) sliderTmg.value = '375';
-    calculateGlucoseFormulas();
-  });
-
-  presetSglt2i?.addEventListener('click', () => {
-    if (sliderPglu) sliderPglu.value = '180';
-    if (sliderTfg) sliderTfg.value = '110';
-    if (sliderTmg) sliderTmg.value = '120';
-    calculateGlucoseFormulas();
+      if (sliderTfg) sliderTfg.value = preset.tfg;
+      if (sliderTmg) sliderTmg.value = preset.tmg;
+      if (sliderPglu) {
+        sliderPglu.value = preset.pglu ?? String(
+          Math.round((Number(preset.tmg) * thresholdFraction * 100) / Number(preset.tfg))
+        );
+      }
+      document.querySelectorAll('.preset-pill').forEach((presetButton) => {
+        presetButton.classList.toggle('active', presetButton === button);
+      });
+      calculateGlucoseFormulas();
+    });
   });
 
   // 2. CÁLCULOS DE FILTRACIÓN GLOMERULAR (FUERZAS DE STARLING)
@@ -548,6 +909,7 @@ const formulasManager = initFormulas();
 const tabBtns = document.querySelectorAll('.tab-btn');
 
 function switchModule(id) {
+  restoreIsolation();
   currentActiveTab = id;
   tabBtns.forEach((btn) => btn.classList.toggle('active', btn.dataset.tab === id));
   formulasManager.switchFormulaModule(id);
@@ -567,24 +929,30 @@ tabBtns.forEach((btn) => btn.addEventListener('click', () => switchModule(btn.da
 
 // --- TOOLBAR IZQUIERDA ---
 const toolBtns = document.querySelectorAll('.tool-btn');
+let activeToolId = 'btn-select';
+updateCutOnlyTools();
 
 toolBtns.forEach((btn) => {
   btn.addEventListener('click', () => {
     if (btn.id === 'btn-draw') return;
+    if (btn.classList.contains('requires-cut')) return;
 
+    if (btn.id === 'btn-xray') {
+      setXrayMode(!isXrayActive);
+      return;
+    }
+
+    if (btn.id !== activeToolId) restoreIsolation();
     setDrawingMode(false);
     toolBtns.forEach((button) => button.classList.remove('active'));
     btn.classList.add('active');
     previousToolButton = btn;
+    activeToolId = btn.id;
 
-    const activeModel = currentActiveTab === '1' ? kidneyModel : nephronModel;
-    if (!activeModel) return;
-    const isXray = btn.id === 'btn-xray';
-    activeModel.traverse((child) => {
-      if (child.isMesh && child.material) {
-        child.material.wireframe = isXray;
-      }
-    });
+    if (btn.id === 'btn-highlight') {
+      setCutView(!isCutViewActive);
+      return;
+    }
   });
 });
 
@@ -602,6 +970,13 @@ function animate() {
   requestAnimationFrame(animate);
   resizeCanvas();
   controls.update();
+  if (nephronFlow) {
+    const progress = (nephronFlowClock.getElapsedTime() / nephronFlow.duration) % 1;
+    nephronFlow.particles.forEach((particle, index) => {
+      const position = (progress + index / nephronFlow.particles.length) % 1;
+      particle.position.copy(nephronFlow.centerline.getPointAt(position));
+    });
+  }
   renderer.render(scene, camera);
 }
 

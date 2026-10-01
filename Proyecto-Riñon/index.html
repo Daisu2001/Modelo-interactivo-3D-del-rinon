@@ -39,7 +39,7 @@
           <span class="icon">⬡</span><span class="label">Aislar</span>
         </button>
         <button class="tool-btn" id="btn-highlight">
-          <span class="icon">✎</span><span class="label">Resaltar</span>
+          <span class="icon">✂</span><span class="label">Activar / desactivar corte</span>
         </button>
         <button class="tool-btn" id="btn-hide">
           <span class="icon">👁</span><span class="label">Mostrar / ocultar</span>
@@ -146,17 +146,17 @@
                   <div class="param-group">
                     <div class="param-label">
                       <span>Transporte Máximo (TmG):</span>
-                      <span class="param-value" id="val-tmg">375 mg/min</span>
+                      <span class="param-value" id="val-tmg">205 mg/min</span>
                     </div>
-                    <input type="range" class="param-slider" id="slider-tmg" min="200" max="450" value="375">
+                    <input type="range" class="param-slider" id="slider-tmg" min="200" max="210" value="205">
                   </div>
 
                   <!-- Presets rápidos -->
                   <div class="preset-pills">
                     <button class="preset-pill active" data-preset="normal">Normal (90)</button>
-                    <button class="preset-pill" data-preset="threshold">Umbral (180)</button>
+                    <button class="preset-pill" data-preset="threshold">Umbral renal</button>
                     <button class="preset-pill" data-preset="glucosuria">Glucosuria (240)</button>
-                    <button class="preset-pill" data-preset="tmg">TmG Máx (350)</button>
+                    <button class="preset-pill" data-preset="tmg">TmG Máx (210)</button>
                   </div>
 
                   <div class="clinical-status-tag normal" id="glucose-status-tag">
@@ -189,7 +189,7 @@
                   <div class="formula-equation">
                     R<sub>Glu</sub> = min(FL<sub>Glu</sub>, TmG)
                   </div>
-                  <p class="formula-desc">90% reabsorbido por <strong>SGLT2</strong> (S1/S2) y 10% por <strong>SGLT1</strong> (S3). Umbral renal: ~180-200 mg/dL.</p>
+                  <p class="formula-desc">90% reabsorbido por <strong>SGLT2</strong> (S1/S2) y 10% por <strong>SGLT1</strong> (S3). El umbral renal depende de TmG y TFG.</p>
                   <div class="saturation-bar-container">
                     <div class="saturation-bar" id="sglt2-bar" style="width: 33.3%;"></div>
                   </div>
