@@ -1,6 +1,11 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { GlucoseModule } from './glucose.js';
+import { FiltrationModule } from './filtration.js';
+import { calculateRenalState } from './renal-physiology.js';
+import { AnatomyBrowser } from './anatomy-browser.js';
+import { prepareGlomerulusMesh } from './glomerulus-structures.js';
 
 // --- ELEMENTOS HTML ---
 const canvas = document.querySelector('#webgl-canvas');
@@ -13,8 +18,8 @@ scene.background = new THREE.Color(0xf6f4f0);
 const camera = new THREE.PerspectiveCamera(
   45,
   container.clientWidth / container.clientHeight,
-  0.1,
-  1000
+  0.001,
+  5000
 );
 camera.position.set(0, 0, 10);
 
@@ -38,14 +43,18 @@ controls.dampingFactor = 0.05;
 
 // --- VARIABLES DE MODELOS ---
 let kidneyModel = null;
-let nephronModel = null;
+let glomerulusAnatomy = null;
+let anatomyKind = 'kidney';
+let anatomyBrowser = null;
 let currentActiveTab = '1';
 let isCutViewActive = false;
 let isXrayActive = false;
-let nephronFlow = null;
+
 const HIDDEN_OPACITY = 0.08;
 const loader = new GLTFLoader();
-const nephronFlowClock = new THREE.Clock();
+const frameClock = new THREE.Clock();
+const glucoseModule = new GlucoseModule(scene);
+const filtrationModule = new FiltrationModule(scene);
 
 // Completar o corregir este mapa cuando el artista entregue la equivalencia
 // semántica de los colores de segmentación. El RGB se obtiene del atributo
@@ -194,63 +203,6 @@ function alignCompleteVariant(completePart, cutPart) {
   completePart.position.add(cutPosition.sub(completePosition));
 }
 
-function createNephronFlow(model) {
-  const mesh = getFirstMesh(model);
-  if (!mesh) return null;
-
-  const centerline = new THREE.CatmullRomCurve3([
-    new THREE.Vector3(-0.017, -0.017, 0.22),
-    new THREE.Vector3(-0.017, -0.017, 0.14),
-    new THREE.Vector3(-0.017, -0.017, 0.04),
-    new THREE.Vector3(-0.017, -0.017, -0.08),
-    new THREE.Vector3(-0.017, -0.017, -0.19),
-    new THREE.Vector3(-0.015, -0.017, -0.25),
-    new THREE.Vector3(-0.008, -0.017, -0.278),
-    new THREE.Vector3(0.003, -0.017, -0.28),
-    new THREE.Vector3(0.008, -0.017, -0.25),
-    new THREE.Vector3(0.008, -0.017, -0.16),
-    new THREE.Vector3(0.008, -0.017, -0.04),
-    new THREE.Vector3(0.008, -0.017, 0.08),
-    new THREE.Vector3(0.008, -0.017, 0.19),
-    new THREE.Vector3(0.004, -0.017, 0.235),
-    new THREE.Vector3(-0.006, -0.017, 0.25),
-    new THREE.Vector3(-0.015, -0.017, 0.235)
-  ], true, 'centripetal');
-  const flowGroup = new THREE.Group();
-  flowGroup.name = 'Flujo tubular';
-
-  const fluidCore = new THREE.Mesh(
-    new THREE.TubeGeometry(centerline, 220, 0.0018, 6, true),
-    new THREE.MeshBasicMaterial({
-      color: 0xc95724,
-      transparent: true,
-      opacity: 0.75,
-      depthTest: false,
-      depthWrite: false
-    })
-  );
-  fluidCore.renderOrder = 5;
-  fluidCore.raycast = () => {};
-  flowGroup.add(fluidCore);
-
-  const particleGeometry = new THREE.SphereGeometry(0.0032, 12, 8);
-  const particleMaterial = new THREE.MeshBasicMaterial({
-    color: 0xff922e,
-    depthTest: false,
-    depthWrite: false
-  });
-  const particles = Array.from({ length: 18 }, () => {
-    const particle = new THREE.Mesh(particleGeometry, particleMaterial);
-    particle.renderOrder = 6;
-    particle.raycast = () => {};
-    flowGroup.add(particle);
-    return particle;
-  });
-
-  mesh.add(flowGroup);
-  return { centerline, particles, duration: 24 };
-}
-
 // La anatomía renal es una única unidad de escena, aunque sus piezas se entreguen
 // en archivos independientes. Así se rota, enfoca y selecciona como un solo riñón.
 Promise.all(
@@ -279,34 +231,108 @@ Promise.all(
     scene.add(kidneyModel);
     setCutView(isCutViewActive);
     setXrayMode(isXrayActive);
-    kidneyModel.visible = currentActiveTab === '1';
-    if (currentActiveTab === '1') focusCameraOn(kidneyModel);
+    kidneyModel.visible = currentActiveTab === '1' && anatomyKind === 'kidney';
+    anatomyBrowser.setModel('kidney', kidneyModel);
+    if (kidneyModel.visible) focusCameraOn(kidneyModel);
   })
   .catch((err) => console.error('❌ Error al cargar las piezas del riñón:', err));
 
-loader.load(
-  './Models/nefrona%20(1).glb',
-  (gltf) => {
-    nephronModel = gltf.scene;
-    setupModel(nephronModel);
-    nephronFlow = createNephronFlow(nephronModel);
-    scene.add(nephronModel);
+// Anatomía usa su propia instancia: ocultar/aislar aquí no altera Filtración.
+async function loadGlomerulusAnatomy() {
+  const status = document.querySelector('#anatomy-loading');
+  try {
+    const gltf = await loader.loadAsync('./Models/Glomerulo.glb');
+    glomerulusAnatomy = gltf.scene;
+    glomerulusAnatomy.name = 'Glomérulo: anatomía';
+    glomerulusAnatomy.scale.setScalar(.18);
+    glomerulusAnatomy.traverse(node => {
+      if (node.isMesh) prepareGlomerulusMesh(node, [], { anatomy: true });
+    });
+    setupModel(glomerulusAnatomy);
+    scene.add(glomerulusAnatomy);
+    glomerulusAnatomy.visible = currentActiveTab === '1' && anatomyKind === 'glomerulus';
     setXrayMode(isXrayActive);
-    nephronModel.visible = currentActiveTab === '2' || currentActiveTab === '3';
-    if (nephronModel.visible) focusCameraOn(nephronModel);
-  },
-  undefined,
-  (err) => console.error('❌ Error al cargar ./Models/nefrona (1).glb:', err)
-);
+    anatomyBrowser.setModel('glomerulus', glomerulusAnatomy);
+    status.hidden = true;
+  } catch (error) {
+    console.error('Error al cargar el glomérulo de Anatomía:', error);
+    status.textContent = 'No se pudo cargar el glomérulo. Recarga la página para reintentar.';
+    status.hidden = currentActiveTab !== '1';
+    document.querySelector('#alternate-model-name').textContent = 'Glomérulo no disponible';
+  }
+}
+
+const anatomyStrokes = { kidney: [], glomerulus: [] };
+function switchAnatomyModel() {
+  if (currentActiveTab !== '1') return;
+  const next = anatomyKind === 'kidney' ? 'glomerulus' : 'kidney';
+  const model = next === 'kidney' ? kidneyModel : glomerulusAnatomy;
+  if (!model) return;
+  restoreIsolation(); setDrawingMode(false);
+  anatomyStrokes[anatomyKind] = strokes.slice();
+  anatomyKind = next;
+  strokes.splice(0, strokes.length, ...anatomyStrokes[next]); redrawAnnotations();
+  if (kidneyModel) kidneyModel.visible = next === 'kidney';
+  glomerulusAnatomy.visible = next === 'glomerulus';
+  updateCutOnlyTools();
+  if (activeToolId === 'btn-highlight') activateSelectTool();
+  anatomyBrowser.setKind(next);
+  infoPanel.classList.remove('hidden');
+  document.querySelector('#btn-panel').setAttribute('aria-expanded', 'true');
+  focusCameraOn(model);
+}
+
+let glucoseLoading = null;
+async function loadGlucose() {
+  if (glucoseLoading) return glucoseLoading;
+  const status = document.querySelector('#glucose-loading');
+  status.hidden = currentActiveTab !== '2';
+  glucoseLoading = glucoseModule.load(loader).then(model => {
+    status.hidden = true;
+    setXrayMode(isXrayActive);
+    if (currentActiveTab === '2') focusCameraOn(model);
+    return model;
+  }).catch(error => {
+    console.error('Error al cargar el recorrido de glucosa:', error);
+    status.textContent = 'No se pudo cargar la simulación. Vuelve a abrir Glucosa para reintentar.';
+    status.hidden = currentActiveTab !== '2';
+    glucoseLoading = null;
+    throw error;
+  });
+  return glucoseLoading;
+}
+
+let filtrationLoading = null;
+async function loadFiltration() {
+  if (filtrationLoading) return filtrationLoading;
+  const status = document.querySelector('#filtration-loading');
+  status.hidden = currentActiveTab !== '3';
+  filtrationLoading = filtrationModule.load(loader).then(model => {
+    status.hidden = true;
+    setXrayMode(isXrayActive);
+    if (currentActiveTab === '3') focusCameraOn(model);
+    return model;
+  }).catch(error => {
+    console.error('Error al cargar el glomérulo:', error);
+    status.textContent = 'No se pudo cargar el glomérulo. Vuelve a abrir Filtración para reintentar.';
+    status.hidden = currentActiveTab !== '3';
+    filtrationLoading = null;
+    throw error;
+  });
+  return filtrationLoading;
+}
 
 function focusCameraOn(model) {
   if (!model) return;
   const box = new THREE.Box3().setFromObject(model);
   const size = box.getSize(new THREE.Vector3());
   const maxDim = Math.max(size.x, size.y, size.z);
-  const distance = maxDim > 0 ? maxDim * 2.2 : 10;
-  camera.position.set(0, 0, distance);
-  controls.target.set(0, 0, 0);
+  const center = box.getCenter(new THREE.Vector3());
+  const verticalFov = THREE.MathUtils.degToRad(camera.fov);
+  const horizontalFov = 2 * Math.atan(Math.tan(verticalFov / 2) * camera.aspect);
+  const distance = maxDim > 0 ? maxDim / (2 * Math.tan(Math.min(verticalFov, horizontalFov) / 2)) * 1.22 : 10;
+  camera.position.copy(center).add(new THREE.Vector3(0, 0, distance));
+  controls.target.copy(center);
   controls.update();
 }
 
@@ -459,14 +485,14 @@ clearButton.addEventListener('click', () => {
 function resizeCanvas() {
   const width = container.clientWidth;
   const height = container.clientHeight;
-  if (canvas.width !== width || canvas.height !== height) {
+  const expectedWidth = Math.round(width * renderer.getPixelRatio());
+  const expectedHeight = Math.round(height * renderer.getPixelRatio());
+  if (canvas.width !== expectedWidth || canvas.height !== expectedHeight) {
     camera.aspect = width / height;
     camera.updateProjectionMatrix();
     renderer.setSize(width, height, false);
   }
 
-  const expectedWidth = Math.round(width * Math.min(window.devicePixelRatio || 1, 2));
-  const expectedHeight = Math.round(height * Math.min(window.devicePixelRatio || 1, 2));
   if (annotationCanvas.width !== expectedWidth || annotationCanvas.height !== expectedHeight) {
     resizeAnnotationCanvas();
   }
@@ -479,7 +505,7 @@ let isolatedMaterial = null;
 let isolatedModel = null;
 
 function getActiveModel() {
-  return currentActiveTab === '1' ? kidneyModel : nephronModel;
+  return currentActiveTab === '1' ? (anatomyKind === 'kidney' ? kidneyModel : glomerulusAnatomy) : currentActiveTab === '2' ? glucoseModule.anatomy : filtrationModule.anatomy;
 }
 
 function isVisibleInHierarchy(object) {
@@ -511,12 +537,16 @@ function restoreIsolation() {
   isolatedModel = null;
 }
 
+function sameAnatomicalRegion(material, selected) {
+  return material === selected || (anatomyKind === 'glomerulus' && material.name === selected?.name);
+}
+
 function isolateMaterial(model, mesh, materialIndex = 0) {
   const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
   const selectedMaterial = materials[materialIndex];
   if (!selectedMaterial) return;
 
-  if (isolatedMaterial === selectedMaterial && isolatedModel === model) {
+  if (sameAnatomicalRegion(selectedMaterial, isolatedMaterial) && isolatedModel === model) {
     restoreIsolation();
     return;
   }
@@ -529,7 +559,7 @@ function isolateMaterial(model, mesh, materialIndex = 0) {
     if (child.isMesh) {
       child.visible = true;
       forEachMaterial(child, (material) => {
-        const isSelected = material === selectedMaterial;
+        const isSelected = sameAnatomicalRegion(material, selectedMaterial);
         // Aislar conserva el contexto anatómico: la región elegida queda opaca
         // y el resto se atenúa, en vez de desaparecer físicamente.
         material.visible = true;
@@ -546,6 +576,7 @@ function isolateMaterial(model, mesh, materialIndex = 0) {
 }
 
 function setCutView(enabled) {
+  if (anatomyKind !== 'kidney') return;
   isCutViewActive = enabled;
   updateCutOnlyTools();
   if (!kidneyModel) return;
@@ -568,20 +599,22 @@ function setCutView(enabled) {
 }
 
 function updateCutOnlyTools() {
-  ['btn-isolate', 'btn-hide'].forEach((id) => {
+  const glomerulusActive = currentActiveTab === '1' && anatomyKind === 'glomerulus';
+  document.querySelector('#btn-highlight').hidden = glomerulusActive;
+  ['btn-isolate', 'btn-hide', 'btn-highlight'].forEach((id) => {
     const button = document.querySelector(`#${id}`);
-    const locked = !isCutViewActive;
+    const locked = currentActiveTab !== '1' || (!glomerulusActive && id !== 'btn-highlight' && !isCutViewActive);
     button.classList.toggle('requires-cut', locked);
     button.setAttribute('aria-disabled', String(locked));
     button.title = locked
-      ? 'Activa el corte para usar esta herramienta.'
+      ? (currentActiveTab !== '1' ? 'Herramienta disponible en Anatomía.' : 'Activa el corte para usar esta herramienta.')
       : '';
   });
 }
 
 function setXrayMode(enabled) {
   isXrayActive = enabled;
-  [kidneyModel, nephronModel].forEach((model) => {
+  [kidneyModel, glomerulusAnatomy, filtrationModule.anatomy, glucoseModule.anatomy].forEach((model) => {
     if (model) {
       model.traverse((child) => {
         if (child.isMesh) {
@@ -604,14 +637,27 @@ function toggleMaterialTransparency(mesh, materialIndex = 0) {
   if (!material) return;
 
   const makeTransparent = material.userData.atlasHidden !== true;
-  material.transparent = makeTransparent;
-  material.opacity = makeTransparent ? HIDDEN_OPACITY : 1.0;
-  material.depthWrite = !makeTransparent;
-  material.userData.atlasHidden = makeTransparent;
-  material.needsUpdate = true;
+  const targets = [];
+  if (currentActiveTab === '1' && anatomyKind === 'glomerulus') {
+    glomerulusAnatomy.traverse(node => {
+      if (node.isMesh) forEachMaterial(node, candidate => {
+        if (sameAnatomicalRegion(candidate, material)) targets.push(candidate);
+      });
+    });
+  } else targets.push(material);
+  targets.forEach(candidate => {
+    candidate.transparent = makeTransparent;
+    candidate.opacity = makeTransparent ? HIDDEN_OPACITY : 1.0;
+    candidate.depthWrite = !makeTransparent;
+    candidate.userData.atlasHidden = makeTransparent;
+    candidate.needsUpdate = true;
+  });
 }
 
+let pointerStart = null;
+canvas.addEventListener('pointerdown', event => { pointerStart = { x: event.clientX, y: event.clientY }; });
 canvas.addEventListener('click', (event) => {
+  if (drawingMode || (pointerStart && Math.hypot(event.clientX - pointerStart.x, event.clientY - pointerStart.y) > 5)) return;
   const activeModel = getActiveModel();
   if (!activeModel) return;
   const rect = canvas.getBoundingClientRect();
@@ -629,274 +675,131 @@ canvas.addEventListener('click', (event) => {
     if (!material || material.visible === false) return false;
     // Durante el aislamiento ignoramos las regiones atenuadas para que un
     // segundo clic alcance siempre la región que debe restaurar la vista.
-    return activeToolId !== 'btn-isolate' || !isolatedModel || material === isolatedMaterial;
+    return activeToolId !== 'btn-isolate' || !isolatedModel || sameAnatomicalRegion(material, isolatedMaterial);
   });
   if (hit) {
     const selectedObject = hit.object;
     const materialIndex = hit.face?.materialIndex ?? 0;
-    const materials = Array.isArray(selectedObject.material)
-      ? selectedObject.material
-      : [selectedObject.material];
-    const selectedMaterial = materials[materialIndex];
-    document.querySelector('#structure-title').innerText =
-      selectedMaterial?.name || selectedObject.name || 'Estructura seleccionada';
-
-    if (activeToolId === 'btn-isolate') {
-      isolateMaterial(activeModel, selectedObject, materialIndex);
-    }
-    if (activeToolId === 'btn-hide') {
-      toggleMaterialTransparency(selectedObject, materialIndex);
+    if (currentActiveTab === '1') {
+      applyAnatomySelection(activeModel, selectedObject, materialIndex, activeToolId);
     }
   }
 });
 
+function applyAnatomySelection(model, mesh, materialIndex, tool) {
+  const material = (Array.isArray(mesh.material) ? mesh.material : [mesh.material])[materialIndex];
+  if (!material) return;
+  anatomyBrowser.select(material.name || mesh.name || 'Estructura seleccionada');
+  infoPanel.classList.remove('hidden');
+  document.querySelector('#btn-panel').setAttribute('aria-expanded', 'true');
+  if (tool === 'btn-isolate') isolateMaterial(model, mesh, materialIndex);
+  if (tool === 'btn-hide') toggleMaterialTransparency(mesh, materialIndex);
+}
+
+function selectAnatomyPart(name) {
+  const model = getActiveModel();
+  if (!model || currentActiveTab !== '1') return;
+  let match = null;
+  model.traverse(mesh => {
+    if (!mesh.isMesh || !isVisibleInHierarchy(mesh)) return;
+    const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+    const index = materials.findIndex(material => material.name === name);
+    if (index >= 0 && !match) match = { mesh, index };
+  });
+  if (!match) { anatomyBrowser.select(name); return; }
+  // La lista también permite escoger otra pieza durante un aislamiento.
+  const material = (Array.isArray(match.mesh.material) ? match.mesh.material : [match.mesh.material])[match.index];
+  if (isolatedModel && !sameAnatomicalRegion(material, isolatedMaterial)) restoreIsolation();
+  applyAnatomySelection(model, match.mesh, match.index, activeToolId);
+}
+
+function activateSelectTool() {
+  document.querySelectorAll('.tool-btn').forEach(button => button.classList.remove('active'));
+  previousToolButton = document.querySelector('#btn-select');
+  previousToolButton.classList.add('active'); activeToolId = 'btn-select';
+}
+
 // --- GESTOR DEL MÓDULO DE FÓRMULAS FISIOLÓGICAS ---
 function initFormulas() {
-  const anatomyView = document.querySelector('#anatomy-view');
-  const formulasView = document.querySelector('#formulas-view');
-  const structureTitle = document.querySelector('#structure-title');
-  const glucoseContent = document.querySelector('#glucose-content');
-  const filtrationContent = document.querySelector('#filtration-content');
-  const btnSubtabGlucose = document.querySelector('#btn-subtab-glucose');
-  const btnSubtabFiltration = document.querySelector('#btn-subtab-filtration');
-
+  const $ = selector => document.querySelector(selector);
+  const anatomyView = $('#anatomy-view'), glucoseView = $('#glucose-view'), formulasView = $('#formulas-view');
+  const structureTitle = $('#structure-title');
+  let selectedFormula = 'glucose';
   function setFormulaSubtab(type) {
-    if (type === 'glucose') {
-      btnSubtabGlucose?.classList.add('active');
-      btnSubtabFiltration?.classList.remove('active');
-      if (glucoseContent) glucoseContent.style.display = 'block';
-      if (filtrationContent) filtrationContent.style.display = 'none';
-      if (structureTitle) structureTitle.innerText = 'Fisiología de la Glucosa';
-    } else {
-      btnSubtabGlucose?.classList.remove('active');
-      btnSubtabFiltration?.classList.add('active');
-      if (glucoseContent) glucoseContent.style.display = 'none';
-      if (filtrationContent) filtrationContent.style.display = 'block';
-      if (structureTitle) structureTitle.innerText = 'Filtración Glomerular (Starling)';
-    }
+    selectedFormula = type;
+    $('#btn-subtab-glucose').classList.toggle('active', type === 'glucose');
+    $('#btn-subtab-filtration').classList.toggle('active', type !== 'glucose');
+    $('#glucose-content').style.display = type === 'glucose' ? 'block' : 'none';
+    $('#filtration-content').style.display = type === 'glucose' ? 'none' : 'block';
+    structureTitle.textContent = type === 'glucose' ? 'Fisiología de la Glucosa' : 'Filtración Glomerular (Starling)';
   }
-
-  btnSubtabGlucose?.addEventListener('click', () => setFormulaSubtab('glucose'));
-  btnSubtabFiltration?.addEventListener('click', () => setFormulaSubtab('filtration'));
-
-  // 1. CÁLCULOS DE TRANSPORTE TUBULAR DE GLUCOSA
-  const sliderPglu = document.querySelector('#slider-pglu');
-  const sliderTfg = document.querySelector('#slider-tfg');
-  const sliderTmg = document.querySelector('#slider-tmg');
-  const valPglu = document.querySelector('#val-pglu');
-  const valTfg = document.querySelector('#val-tfg');
-  const valTmg = document.querySelector('#val-tmg');
-  const resFl = document.querySelector('#res-fglu');
-  const resReab = document.querySelector('#res-rglu');
-  const resExc = document.querySelector('#res-eglu');
-  const resFe = document.querySelector('#res-feglu');
-  const fillSglt2 = document.querySelector('#sglt2-bar');
-  const fillSglt1 = document.querySelector('#fill-sglt1');
-  const pctSglt2 = document.querySelector('#pct-sglt2');
-  const pctSglt1 = document.querySelector('#pct-sglt1');
-  const glucoseClinicalState = document.querySelector('#glucose-clinical-state');
-  const glucoseStatusTag = document.querySelector('#glucose-status-tag');
-  const glucoseStatusText = document.querySelector('#glucose-status-text');
-  const thresholdFraction = 0.72;
-
-  function calculateGlucoseFormulas() {
-    if (!sliderPglu || !sliderTfg || !sliderTmg) return;
-
-    const pglu = parseFloat(sliderPglu.value);
-    const tfg = parseFloat(sliderTfg.value);
-    const tmg = parseFloat(sliderTmg.value);
-
-    // Carga Filtrada: FL = (P_glu * TFG) / 100
-    const cargaFiltrada = (pglu * tfg) / 100;
-
-    // Umbral renal real con fenómeno de splay (~180 mg/dL a TFG normal)
-    const splayStart = tmg * thresholdFraction;
-
-    let reabsorcion = 0;
-    if (cargaFiltrada <= splayStart) {
-      reabsorcion = cargaFiltrada;
-    } else if (cargaFiltrada < tmg) {
-      const delta = cargaFiltrada - splayStart;
-      const range = tmg - splayStart;
-      const curve = Math.sin((delta / range) * (Math.PI / 2));
-      reabsorcion = splayStart + curve * range;
-    } else {
-      reabsorcion = tmg;
-    }
-
-    // Excreción: E = FL - R
-    const excrecion = Math.max(0, cargaFiltrada - reabsorcion);
-    const fe = cargaFiltrada > 0 ? (excrecion / cargaFiltrada) * 100 : 0;
-
-    // Distribución SGLT2 (~90%) y SGLT1 (~10%)
-    const capSglt2 = tmg * 0.90;
-    const capSglt1 = tmg * 0.10;
-    const reabSglt2 = Math.min(capSglt2, reabsorcion * 0.90);
-    const reabSglt1 = Math.min(capSglt1, reabsorcion - reabSglt2);
-    const pct2Val = Math.min(100, Math.round((reabSglt2 / capSglt2) * 100));
-    const pct1Val = Math.min(100, Math.round((reabSglt1 / capSglt1) * 100));
-
-    if (valPglu) valPglu.innerText = `${Math.round(pglu)} mg/dL`;
-    if (valTfg) valTfg.innerText = `${Math.round(tfg)} mL/min`;
-    if (valTmg) valTmg.innerText = `${Math.round(tmg)} mg/min`;
-
-    if (resFl) resFl.innerText = `${cargaFiltrada.toFixed(1)} mg/min`;
-    if (resReab) resReab.innerText = `${reabsorcion.toFixed(1)} mg/min`;
-    if (resExc) resExc.innerText = `${excrecion.toFixed(1)} mg/min`;
-    if (resFe) resFe.innerText = `${fe.toFixed(1)} %`;
-
-    if (fillSglt2) fillSglt2.style.width = `${pct2Val}%`;
-    if (fillSglt1) fillSglt1.style.width = `${pct1Val}%`;
-    if (pctSglt2) pctSglt2.innerText = `${pct2Val}%`;
-    if (pctSglt1) pctSglt1.innerText = `${pct1Val}%`;
-
-    if (excrecion <= 0.5) {
-      if (glucoseClinicalState) {
-        glucoseClinicalState.innerText = 'Normoglucemia';
-        glucoseClinicalState.className = 'formula-badge';
-      }
-      if (glucoseStatusTag) {
-        glucoseStatusTag.className = 'clinical-status-tag normal';
-      }
-      if (glucoseStatusText) {
-        glucoseStatusText.innerText = 'La carga filtrada está dentro del rango fisiológico normal. Toda la glucosa se reabsorbe por SGLT2 y SGLT1 sin glucosuria.';
-      }
-    } else if (excrecion < 80) {
-      if (glucoseClinicalState) {
-        glucoseClinicalState.innerText = 'Glucosuria Leve';
-        glucoseClinicalState.className = 'formula-badge amber';
-      }
-      if (glucoseStatusTag) {
-        glucoseStatusTag.className = 'clinical-status-tag warning';
-      }
-      if (glucoseStatusText) {
-        glucoseStatusText.innerText = `Glucemia plasmática supera el umbral de saturación renal (~${Math.round((splayStart * 100) / tfg)} mg/dL). Aparecen trazas de glucosa en la orina final.`;
-      }
-    } else {
-      if (glucoseClinicalState) {
-        glucoseClinicalState.innerText = 'Glucosuria Masiva';
-        glucoseClinicalState.className = 'formula-badge danger';
-      }
-      if (glucoseStatusTag) {
-        glucoseStatusTag.className = 'clinical-status-tag danger';
-      }
-      if (glucoseStatusText) {
-        glucoseStatusText.innerText = 'Saturación total de transportadores SGLT2/SGLT1 (>210 mg/min). Toda glucosa adicional filtrada se excreta, provocando diuresis osmótica.';
-      }
-    }
+  $('#btn-subtab-glucose').addEventListener('click', () => setFormulaSubtab('glucose'));
+  $('#btn-subtab-filtration').addEventListener('click', () => setFormulaSubtab('filtration'));
+  function readParameters() {
+    const p = { linkStarling: $('#link-starling').checked };
+    for (const key of ['pglu', 'tfg', 'tmg', 'pgc', 'pbs', 'pigc', 'pibs']) p[key] = Number($('#slider-' + key).value);
+    return p;
   }
-
-  function handleGlucoseInput() {
-    document.querySelectorAll('.preset-pill').forEach((button) => button.classList.remove('active'));
-    calculateGlucoseFormulas();
+  function refreshFormulas() {
+    const state = calculateRenalState(readParameters());
+    if (state.linkStarling) $('#slider-tfg').value = state.tfg;
+    $('#val-pglu').textContent = state.pglu.toFixed(0) + ' mg/dL';
+    $('#val-tfg').textContent = state.tfg.toFixed(1) + ' mL/min';
+    $('#val-tmg').textContent = state.tmg.toFixed(0) + ' mg/min';
+    $('#res-fglu').textContent = state.filtered.toFixed(1) + ' mg/min';
+    $('#res-rglu').textContent = state.reabsorbed.toFixed(1) + ' mg/min';
+    $('#res-eglu').textContent = state.excreted.toFixed(1) + ' mg/min';
+    $('#res-feglu').textContent = (state.fractionExcreted * 100).toFixed(1) + ' %';
+    $('#sglt2-bar').style.width = (state.tmg > 0 ? Math.min(100, state.reabsorbed / state.tmg * 100) : 0) + '%';
+    $('#glucose-clinical-state').textContent = state.glucoseState;
+    $('#glucose-clinical-state').className = state.excreted > 0 ? 'formula-badge amber' : 'formula-badge';
+    $('#glucose-status-tag').className = state.excreted > 0 ? 'clinical-status-tag warning' : 'clinical-status-tag normal';
+    $('#glucose-status-text').textContent = state.filtered === 0
+      ? 'La TFG activa es cero: no pasa glucosa al filtrado.'
+      : state.excreted > 0
+        ? 'La carga filtrada supera TmG. El ' + (state.fractionExcreted * 100).toFixed(1) + '% de la glucosa no se reabsorbe y continúa por el túbulo.'
+        : 'La carga filtrada está dentro de TmG: la glucosa se reabsorbe en el túbulo proximal.';
+    for (const key of ['pgc', 'pbs', 'pigc', 'pibs']) $('#val-' + key).textContent = state[key].toFixed(0) + ' mmHg';
+    $('#res-pfn').textContent = (state.pfn >= 0 ? '+' : '') + state.pfn.toFixed(1) + ' mmHg';
+    $('#res-starling-tfg').textContent = state.starlingTfg.toFixed(1) + ' mL/min';
+    $('#starling-status-tag').className = state.pfn <= 0 ? 'clinical-status-tag danger'
+      : state.pfn < 8 || state.pfn > 12 ? 'clinical-status-tag warning' : 'clinical-status-tag normal';
+    $('#starling-status-text').textContent = state.pressureState + '. ' + (state.linkStarling
+      ? 'Esta TFG controla la animación y las cuatro fórmulas de glucosa.'
+      : 'La simulación usa TFG manual. Activa la vinculación para usar estas presiones.');
+    const threshold = state.tfg > 0 ? Math.ceil(state.tmg * 100 / state.tfg) : Infinity;
+    const thresholdButton = $('[data-preset="threshold"]');
+    thresholdButton.disabled = threshold < Number($('#slider-pglu').min) || threshold > Number($('#slider-pglu').max);
+    thresholdButton.title = thresholdButton.disabled ? 'El umbral calculado queda fuera del rango del slider de glucemia.'
+      : 'Glucemia para que la carga filtrada alcance TmG con la TFG activa.';
+    filtrationModule.setState(state);
   }
-
-  sliderPglu?.addEventListener('input', handleGlucoseInput);
-  sliderTfg?.addEventListener('input', handleGlucoseInput);
-  sliderTmg?.addEventListener('input', handleGlucoseInput);
-
-  // Presets clínicos de Glucosa
-  const glucosePresets = {
-    normal: { pglu: '90', tfg: '125', tmg: '205' },
-    threshold: { pglu: null, tfg: '125', tmg: '205' },
-    glucosuria: { pglu: '240', tfg: '125', tmg: '205' },
-    tmg: { pglu: '100', tfg: '125', tmg: '210' }
-  };
-
-  document.querySelectorAll('.preset-pill[data-preset]').forEach((button) => {
-    button.addEventListener('click', () => {
-      const preset = glucosePresets[button.dataset.preset];
-      if (!preset) return;
-
-      if (sliderTfg) sliderTfg.value = preset.tfg;
-      if (sliderTmg) sliderTmg.value = preset.tmg;
-      if (sliderPglu) {
-        sliderPglu.value = preset.pglu ?? String(
-          Math.round((Number(preset.tmg) * thresholdFraction * 100) / Number(preset.tfg))
-        );
-      }
-      document.querySelectorAll('.preset-pill').forEach((presetButton) => {
-        presetButton.classList.toggle('active', presetButton === button);
-      });
-      calculateGlucoseFormulas();
+  function clearPresets() { document.querySelectorAll('.preset-pill').forEach(button => button.classList.remove('active')); }
+  for (const key of ['pglu', 'tfg', 'tmg', 'pgc', 'pbs', 'pigc', 'pibs']) {
+    $('#slider-' + key).addEventListener('input', () => {
+      if (key === 'tfg') $('#link-starling').checked = false;
+      clearPresets(); refreshFormulas();
     });
-  });
-
-  // 2. CÁLCULOS DE FILTRACIÓN GLOMERULAR (FUERZAS DE STARLING)
-  const sliderPgc = document.querySelector('#slider-pgc');
-  const sliderPbs = document.querySelector('#slider-pbs');
-  const sliderPigc = document.querySelector('#slider-pigc');
-  const sliderPibs = document.querySelector('#slider-pibs');
-  const valPgc = document.querySelector('#val-pgc');
-  const valPbs = document.querySelector('#val-pbs');
-  const valPigc = document.querySelector('#val-pigc');
-  const valPibs = document.querySelector('#val-pibs');
-  const resPfn = document.querySelector('#res-pfn');
-  const resStarlingTfg = document.querySelector('#res-starling-tfg');
-  const starlingStatusTag = document.querySelector('#starling-status-tag');
-  const starlingStatusText = document.querySelector('#starling-status-text');
-
-  function calculateStarlingFormulas() {
-    if (!sliderPgc || !sliderPbs || !sliderPigc || !sliderPibs) return;
-
-    const pgc = parseFloat(sliderPgc.value);
-    const pbs = parseFloat(sliderPbs.value);
-    const pigc = parseFloat(sliderPigc.value);
-    const pibs = parseFloat(sliderPibs.value);
-
-    // PFN = (P_GC - P_BS) - (pi_GC - pi_BS)
-    const pfn = (pgc - pbs) - (pigc - pibs);
-
-    // TFG = Kf * PFN (Kf normal promedio = 12.5 mL/min/mmHg)
-    const kf = 12.5;
-    const starlingTfg = Math.max(0, kf * pfn);
-
-    if (valPgc) valPgc.innerText = `${Math.round(pgc)} mmHg`;
-    if (valPbs) valPbs.innerText = `${Math.round(pbs)} mmHg`;
-    if (valPigc) valPigc.innerText = `${Math.round(pigc)} mmHg`;
-    if (valPibs) valPibs.innerText = `${Math.round(pibs)} mmHg`;
-
-    if (resPfn) resPfn.innerText = `${pfn >= 0 ? '+' : ''}${pfn.toFixed(1)} mmHg`;
-    if (resStarlingTfg) resStarlingTfg.innerText = `${starlingTfg.toFixed(1)} mL/min`;
-
-    if (pfn >= 8 && pfn <= 12) {
-      if (starlingStatusTag) starlingStatusTag.className = 'clinical-status-tag normal';
-      if (starlingStatusText) starlingStatusText.innerText = 'Ultrafiltración fisiológica normal (+10 mmHg). Balance óptimo de presiones.';
-    } else if (pfn > 12) {
-      if (starlingStatusTag) starlingStatusTag.className = 'clinical-status-tag warning';
-      if (starlingStatusText) starlingStatusText.innerText = 'Hiperfiltración glomerular por elevación de presión capilar hidrostática.';
-    } else if (pfn > 0) {
-      if (starlingStatusTag) starlingStatusTag.className = 'clinical-status-tag warning';
-      if (starlingStatusText) starlingStatusText.innerText = 'Hipofiltración glomerular. Presión neta reducida.';
-    } else {
-      if (starlingStatusTag) starlingStatusTag.className = 'clinical-status-tag danger';
-      if (starlingStatusText) starlingStatusText.innerText = 'Cese de filtración glomerular: presiones opuestas superan la presión capilar.';
-    }
   }
-
-  sliderPgc?.addEventListener('input', calculateStarlingFormulas);
-  sliderPbs?.addEventListener('input', calculateStarlingFormulas);
-  sliderPigc?.addEventListener('input', calculateStarlingFormulas);
-  sliderPibs?.addEventListener('input', calculateStarlingFormulas);
-
-  calculateGlucoseFormulas();
-  calculateStarlingFormulas();
-
+  $('#link-starling').addEventListener('change', () => { clearPresets(); refreshFormulas(); });
+  document.querySelectorAll('.preset-pill[data-preset]').forEach(button => button.addEventListener('click', () => {
+    const preset = button.dataset.preset;
+    const tmg = preset === 'tmg' ? 210 : 205;
+    $('#slider-tmg').value = tmg;
+    const state = calculateRenalState(readParameters());
+    const pglu = preset === 'normal' ? 90 : preset === 'glucosuria' ? 240
+      : preset === 'tmg' ? 100 : state.tfg > 0 ? Math.ceil(tmg * 100 / state.tfg) : 100;
+    $('#slider-pglu').value = pglu;
+    clearPresets(); button.classList.add('active'); refreshFormulas();
+  }));
+  refreshFormulas();
   return {
     switchFormulaModule(id) {
-      if (id === '1') {
-        if (anatomyView) anatomyView.style.display = 'block';
-        if (formulasView) formulasView.style.display = 'none';
-        if (structureTitle) structureTitle.innerText = 'Corteza renal';
-      } else if (id === '2') {
-        if (anatomyView) anatomyView.style.display = 'none';
-        if (formulasView) formulasView.style.display = 'block';
-        setFormulaSubtab('glucose');
-      } else if (id === '3') {
-        if (anatomyView) anatomyView.style.display = 'none';
-        if (formulasView) formulasView.style.display = 'block';
-        setFormulaSubtab('filtration');
-      }
+      anatomyView.style.display = id === '1' ? 'block' : 'none';
+      glucoseView.style.display = id === '2' ? 'block' : 'none';
+      formulasView.style.display = id === '3' ? 'block' : 'none';
+      if (id === '3') setFormulaSubtab(selectedFormula);
+      else if (id === '2') structureTitle.textContent = 'Recorrido de la glucosa';
     },
     setFormulaSubtab
   };
@@ -910,18 +813,38 @@ const tabBtns = document.querySelectorAll('.tab-btn');
 
 function switchModule(id) {
   restoreIsolation();
+  setDrawingMode(false);
   currentActiveTab = id;
+  updateCutOnlyTools();
+  if (document.querySelector('.tool-btn.requires-cut.active')) {
+    document.querySelectorAll('.tool-btn').forEach(button => button.classList.remove('active'));
+    previousToolButton = document.querySelector('#btn-select');
+    previousToolButton.classList.add('active');
+    activeToolId = 'btn-select';
+  }
+  glucoseModule.setActive(id === '2');
+  filtrationModule.setActive(id === '3');
+  document.querySelector('#filtration-loading').hidden = id !== '3' || !!filtrationModule.simulation;
+  document.querySelector('#glucose-loading').hidden = id !== '2' || !!glucoseModule.simulation;
+  infoPanel.classList.remove('hidden');
+  document.querySelector('#btn-panel').setAttribute('aria-expanded', 'true');
   tabBtns.forEach((btn) => btn.classList.toggle('active', btn.dataset.tab === id));
   formulasManager.switchFormulaModule(id);
+  anatomyBrowser.setActive(id === '1');
 
   // Modelos 3D visibles
   if (kidneyModel) {
-    kidneyModel.visible = id === '1';
-    if (id === '1') focusCameraOn(kidneyModel);
+    kidneyModel.visible = id === '1' && anatomyKind === 'kidney';
   }
-  if (nephronModel) {
-    nephronModel.visible = id === '2' || id === '3';
-    if (id === '2' || id === '3') focusCameraOn(nephronModel);
+  if (glomerulusAnatomy) glomerulusAnatomy.visible = id === '1' && anatomyKind === 'glomerulus';
+  if (id === '1') focusCameraOn(getActiveModel());
+  if (id === '2') {
+    if (glucoseModule.simulation) focusCameraOn(glucoseModule.root);
+    else loadGlucose().catch(() => {});
+  }
+  if (id === '3') {
+    if (filtrationModule.simulation) focusCameraOn(filtrationModule.root);
+    else loadFiltration().catch(() => {});
   }
 }
 
@@ -951,6 +874,7 @@ toolBtns.forEach((btn) => {
 
     if (btn.id === 'btn-highlight') {
       setCutView(!isCutViewActive);
+      anatomyBrowser.refresh();
       return;
     }
   });
@@ -960,25 +884,33 @@ toolBtns.forEach((btn) => {
 const closeBtn = document.querySelector('#close-panel');
 const infoPanel = document.querySelector('#info-panel');
 
-closeBtn?.addEventListener('click', () => {
+function toggleInfoPanel() {
   infoPanel.classList.toggle('hidden');
-  setTimeout(resizeCanvas, 300);
-});
+  document.querySelector('#btn-panel').setAttribute('aria-expanded', String(!infoPanel.classList.contains('hidden')));
+}
+closeBtn?.addEventListener('click', toggleInfoPanel);
+document.querySelector('#btn-panel').addEventListener('click', toggleInfoPanel);
 
 // --- LOOP DE ANIMACIÓN ---
 function animate() {
   requestAnimationFrame(animate);
   resizeCanvas();
   controls.update();
-  if (nephronFlow) {
-    const progress = (nephronFlowClock.getElapsedTime() / nephronFlow.duration) % 1;
-    nephronFlow.particles.forEach((particle, index) => {
-      const position = (progress + index / nephronFlow.particles.length) % 1;
-      particle.position.copy(nephronFlow.centerline.getPointAt(position));
-    });
-  }
+  const dt = Math.min(frameClock.getDelta(), .05);
+  glucoseModule.update(dt);
+  filtrationModule.update(dt);
   renderer.render(scene, camera);
+  anatomyBrowser.update();
 }
 
+anatomyBrowser = new AnatomyBrowser(selectAnatomyPart, switchAnatomyModel);
+anatomyBrowser.refresh();
+loadGlomerulusAnatomy();
+
+// Read-only handles used to inspect integration without changing the simulation.
+window.atlasRenal = { glucoseModule, filtrationModule, scene, camera, controls,
+  get activeTab() { return currentActiveTab; },
+  get anatomyKind() { return anatomyKind; },
+  get anatomyModel() { return getActiveModel(); } };
 resizeAnnotationCanvas();
 animate();

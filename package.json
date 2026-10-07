@@ -1,0 +1,12 @@
+{
+  "name": "modelo-interactivo-rinon",
+  "version": "3.1.0",
+  "private": true,
+  "scripts": {
+    "start": "node Proyecto-Riñon/server.mjs",
+    "test": "node Proyecto-Riñon/tools/verify.mjs && node Proyecto-Riñon/tools/verify-glomerulus.mjs"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

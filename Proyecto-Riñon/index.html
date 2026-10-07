@@ -8,8 +8,9 @@
   <script type="importmap">
     {
       "imports": {
-        "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
-        "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+        "three": "./vendor/three.module.js",
+        "three/addons/controls/OrbitControls.js": "./vendor/OrbitControls.js",
+        "three/addons/loaders/GLTFLoader.js": "./vendor/GLTFLoader.js"
       }
     }
   </script>
@@ -26,7 +27,7 @@
       <div class="top-actions">
         <button class="icon-btn" title="Inicio">🏠</button>
         <button class="icon-btn" title="Guardar">💾</button>
-        <button class="icon-btn" title="Configuración">⚙️</button>
+        <button class="icon-btn" id="btn-panel" title="Mostrar / ocultar panel informativo" aria-label="Mostrar / ocultar panel informativo" aria-expanded="true">☰</button>
       </div>
     </header>
 
@@ -57,6 +58,19 @@
 
       <div class="canvas-container">
         <canvas id="webgl-canvas"></canvas>
+        <button id="anatomy-model-switch" class="anatomy-model-switch" type="button" aria-label="Abrir glomérulo" disabled>
+          <span class="model-switch-eyebrow">Explorar otro modelo</span>
+          <canvas id="alternate-model-canvas" aria-hidden="true"></canvas>
+          <span id="alternate-model-name">Cargando glomérulo…</span>
+          <span class="model-switch-action">Seleccionar ↗</span>
+        </button>
+        <div id="anatomy-loading" class="canvas-loading" role="status" hidden>Cargando glomérulo…</div>
+
+        <div id="glucose-loading" class="canvas-loading" role="status" hidden>Cargando recorrido de la glucosa…</div>
+        <div id="filtration-loading" class="canvas-loading" role="status" hidden>Cargando glomérulo…</div>
+        <div id="filtration-pause-notice" class="simulation-pause-notice" role="status" hidden>Simulación en pausa</div>
+        <div id="filtration-legend" class="filtration-legend" hidden><span><i class="legend-blood"></i>Sangre</span><span><i class="legend-filtrate"></i>Filtrado</span><span><i class="legend-glucose"></i>Glucosa</span></div>
+        <div id="pause-notice" class="simulation-pause-notice" role="status" hidden>Simulación en pausa</div>
 
         <!-- Pizarra transparente superpuesta al visor 3D -->
         <canvas id="annotation-canvas" aria-label="Pizarra de anotaciones"></canvas>
@@ -87,7 +101,11 @@
         <div class="panel-body">
           <!-- VISTA 1: ANATOMÍA (Contenido anatómico original) -->
           <div id="anatomy-view" class="panel-view">
-            <div class="thumb-preview"><span class="thumb-placeholder">Vista Previa</span></div>
+            <div class="thumb-preview anatomy-part-preview">
+              <canvas id="structure-preview-canvas" aria-label="Vista aislada de la estructura seleccionada"></canvas>
+              <span id="structure-preview-empty" hidden>Selecciona una estructura</span>
+            </div>
+            <p class="preview-caption">Vista aislada · arrastra para girar</p>
             <p id="structure-desc">Capa externa del riñón donde se localizan los glomérulos.</p>
             <div class="section-divider"></div>
             <h3>Función</h3>
@@ -107,11 +125,63 @@
             </ul>
           </div>
 
-          <!-- ============================================================= -->
-          <!-- === [INICIO: SECCIÓN DE FÓRMULAS FISIOLÓGICAS (NUEVO)] ======== -->
-          <!-- ============================================================= -->
+          <div id="glucose-view" class="panel-view" style="display: none;">
+            <ol class="glucose-steps" aria-label="Pasos del recorrido de la glucosa">
+              <li class="glucose-step active" aria-current="step">
+                <b>01</b><div><h3>Filtración</h3><p>La sangre entra por el vaso central. La glucosa pasa al filtrado y la sangre sale por la otra arteriola.</p></div>
+              </li>
+              <li class="glucose-step">
+                <b>02</b><div><h3>Reabsorción</h3><p>Las partículas reabsorbidas desaparecen en el primer tramo del tubo amarillo.</p></div>
+              </li>
+              <li class="glucose-step">
+                <b>03</b><div><h3>Recorrido completo</h3><p id="step3-description">El filtrado continúa; en este estado, toda la glucosa se reabsorbe antes del colector.</p></div>
+              </li>
+            </ol>
+            <div class="section-divider"></div>
+            <section class="simulation-controls" aria-label="Control de simulación">
+              <span class="simulation-eyebrow">Control de simulación</span>
+              <h3 id="flow-title">Filtración baja</h3>
+              <p id="flow-description">Pocas partículas · velocidad lenta</p>
+              <div class="mode-buttons" role="group" aria-label="Estado de filtración">
+                <button type="button" data-mode="low" aria-pressed="true">Bajo</button>
+                <button type="button" data-mode="normal" aria-pressed="false">Normal</button>
+                <button type="button" data-mode="glucosuria" aria-pressed="false">Glucosuria</button>
+              </div>
+              <dl class="simulation-metrics">
+                <div><dt>Glucosa filtrada</dt><dd id="filtered">0</dd></div>
+                <div><dt>Glucosa reabsorbida</dt><dd id="absorbed">0</dd></div>
+                <div><dt>Glucosa que llegó al colector</dt><dd id="collector">0</dd></div>
+              </dl>
+              <label class="range-label" for="opacity">Opacidad de las paredes <output id="opacity-value">20%</output></label>
+              <input id="opacity" type="range" min="0.04" max="0.8" step="0.01" value="0.2">
+              <label class="vessels-check"><input id="vessels" type="checkbox" checked> Mostrar vasos sanguíneos</label>
+              <div class="simulation-actions">
+                <button type="button" id="pause">Pausar</button>
+                <button type="button" id="restart">Reiniciar</button>
+              </div>
+              <p class="simulation-note">Los contadores indican partículas de la simulación. La desaparición representa la reabsorción de forma esquemática.</p>
+            </section>
+          </div>
           <div id="formulas-view" class="panel-view" style="display: none;">
             <div class="formulas-section">
+              <section class="glomerulus-controls" aria-label="Simulación del glomérulo">
+                <div class="glomerulus-heading"><h3>Glomérulo · simulación</h3><span id="filtration-source">TFG de Starling</span></div>
+                <p id="filtration-flow-state">Filtración normal</p>
+                <p id="filtration-glucose-state">Reabsorción completa</p>
+                <div class="glomerulus-summary"><span>TFG activa</span><strong id="filtration-active-tfg">125.0 mL/min</strong></div>
+                <p id="filtration-fraction">100% reabsorbida · 0% continúa</p>
+                <label class="link-starling"><input id="link-starling" type="checkbox" checked> Vincular TFG a Starling</label>
+                <p class="glomerulus-hint">Las presiones controlan la TFG. Mueve el slider TFG para usar un valor manual.</p>
+                <div class="glomerulus-events">
+                  <div><span>Filtradas</span><strong id="glomerulus-filtered">0</strong></div>
+                  <div><span>Reabsorbidas</span><strong id="glomerulus-absorbed">0</strong></div>
+                  <div><span>Continúan</span><strong id="glomerulus-continued">0</strong></div>
+                </div>
+                <label class="range-label" for="glomerulus-opacity">Opacidad del modelo <output id="glomerulus-opacity-value">20%</output></label>
+                <input id="glomerulus-opacity" type="range" min="0.04" max="0.65" step="0.01" value="0.2">
+                <div class="simulation-actions"><button id="filtration-pause" type="button">Pausar</button><button id="filtration-restart" type="button">Reiniciar</button></div>
+                <p class="glomerulus-hint">Modelo parcial: la glucosa que sale del proximal continúa hacia el resto de la nefrona. Los contadores representan partículas.</p>
+              </section>
               <!-- Sub-pestañas de fórmulas -->
               <div class="formula-subnav">
                 <button class="formula-subtab active" id="btn-subtab-glucose">Glucosa (SGLT2/TmG)</button>
@@ -140,7 +210,7 @@
                       <span>Filtración Glomerular (TFG):</span>
                       <span class="param-value" id="val-tfg">125 mL/min</span>
                     </div>
-                    <input type="range" class="param-slider" id="slider-tfg" min="30" max="180" value="125">
+                    <input type="range" class="param-slider" id="slider-tfg" min="0" max="625" step="0.1" value="125">
                   </div>
 
                   <div class="param-group">
@@ -189,7 +259,7 @@
                   <div class="formula-equation">
                     R<sub>Glu</sub> = min(FL<sub>Glu</sub>, TmG)
                   </div>
-                  <p class="formula-desc">90% reabsorbido por <strong>SGLT2</strong> (S1/S2) y 10% por <strong>SGLT1</strong> (S3). El umbral renal depende de TmG y TFG.</p>
+                  <p class="formula-desc">90% reabsorbido por <strong>SGLT2</strong> (S1/S2) y 10% por <strong>SGLT1</strong> (S3). El modelo usa R = min(carga filtrada, TmG). El umbral de saturación depende de TmG y TFG.</p>
                   <div class="saturation-bar-container">
                     <div class="saturation-bar" id="sglt2-bar" style="width: 33.3%;"></div>
                   </div>

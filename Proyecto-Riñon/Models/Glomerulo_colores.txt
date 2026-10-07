@@ -1,0 +1,9 @@
+#B79B55: Túbulo proximal 
+
+#B73448: Capsula/espacio de Bowman
+
+#E79338: Arteriola eferente
+
+#98009B: Arteriola Aferente
+
+#557C9B: Túbulo Distal
