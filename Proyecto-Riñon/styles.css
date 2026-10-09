@@ -368,3 +368,171 @@ body {
   .drawing-controls { left: 12px; right: 12px; transform: translateY(-12px); flex-wrap: wrap; justify-content: center; }
   .drawing-controls.visible { transform: translateY(0); }
 }
+<<<<<<< Updated upstream
+=======
+
+/* Recorrido de glucosa: controles integrados en el panel original. */
+.glucose-steps { list-style: none; display: grid; gap: 8px; }
+.glucose-step { display: flex; align-items: flex-start; gap: 10px; padding: 10px;
+  border: 1px solid #e4ddd5; border-radius: 8px; background: #f1eeea; }
+.glucose-step > b { font-size: 1.15rem; color: #a39a91; line-height: 1.3; }
+.glucose-step h3 { margin-top: 0; font-size: .8rem; color: #6f625a; }
+.glucose-step p { font-size: .73rem; color: #756b64; }
+.glucose-step.active { background: #fff7ed; border-color: #d99143; box-shadow: inset 3px 0 #d97724; }
+.glucose-step.active > b, .glucose-step.active h3 { color: #8c2626; }
+.simulation-eyebrow { text-transform: uppercase; letter-spacing: .09em; font-size: .69rem; font-weight: 700; color: #8c2626; }
+#flow-title { font-size: 1.2rem; margin-top: 8px; color: #2b2b2b; }
+#flow-description { font-size: .76rem; color: #76665d; margin: 6px 0 12px; }
+.mode-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
+.mode-buttons button, .simulation-actions button { border: 1px solid #d5c8bc; border-radius: 7px;
+  background: #fff; color: #63534b; padding: 10px; font-size: .8rem; cursor: pointer; }
+.mode-buttons button:last-child { grid-column: 1 / -1; }
+.mode-buttons button[aria-pressed="true"] { background: #8c2626; border-color: #8c2626; color: #fff; font-weight: 700; }
+.mode-buttons button:hover, .simulation-actions button:hover { border-color: #8c2626; }
+.simulation-metrics { margin: 12px 0 18px; }
+.simulation-metrics > div { display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 11px 0; border-bottom: 1px solid #e2ded8; }
+.simulation-metrics dt { max-width: 175px; font-size: .78rem; line-height: 1.4; color: #554943; }
+.simulation-metrics dd { font-size: 1.45rem; font-weight: 700; color: #c66615; }
+.simulation-metrics #collector { color: #217f84; }
+.range-label { display: flex; justify-content: space-between; gap: 10px; font-size: .76rem; color: #554943; }
+.range-label output { color: #8c2626; font-weight: 600; }
+#opacity { width: 100%; margin: 12px 0 18px; accent-color: #d97724; }
+.vessels-check { display: flex; align-items: center; gap: 8px; font-size: .76rem; color: #554943; }
+.vessels-check input { accent-color: #d97724; }
+.simulation-actions { display: flex; gap: 8px; margin-top: 18px; }
+.simulation-actions button { flex: 1; }
+.simulation-actions #pause { background: #8c2626; color: white; border-color: #8c2626; font-weight: 700; }
+.simulation-controls .simulation-note { font-size: .68rem; line-height: 1.5; margin-top: 14px; color: #82746b; }
+.simulation-pause-notice, .canvas-loading { position: absolute; left: 50%; transform: translateX(-50%);
+  z-index: 3; padding: 10px 16px; border-radius: 8px; font-size: .8rem; text-align: center; pointer-events: none; }
+.simulation-pause-notice { bottom: 24px; color: #24587c; background: #e7f3ff; border: 1px solid #bdd8ed; }
+.canvas-loading { top: 24px; color: #63534b; background: #f9f7f4; border: 1px solid #d8cfc4; max-width: 85%; }
+[hidden] { display: none !important; }
+button:focus-visible, input:focus-visible { outline: 2px solid #d97724; outline-offset: 3px; }
+
+@media (max-width: 650px) {
+  .top-bar { padding: 8px; gap: 8px; flex-wrap: wrap; }
+  .top-actions { display: flex; margin-left: auto; }
+  .top-actions .icon-btn[title="Guardar"] { display: none; }
+  .icon-btn#btn-panel { width: 30px; height: 30px; }
+  .home-nav-btn { min-width: 70px; height: 30px; padding: 0 8px; }
+  .tab-btn { padding: 6px 10px; }
+  .nav-tabs { order: 3; width: 100%; justify-content: center; }
+  .tab-btn { font-size: .7rem; }
+  .toolbar-left { width: 56px; padding: 10px 4px; gap: 8px; flex-shrink: 0; }
+  .tool-btn .label { font-size: .57rem; }
+  .info-panel-right { width: 250px; padding: 12px; }
+  .canvas-container { min-width: 0; }
+}
+
+/* Glomérulo conectado a los parámetros de ambas subpestañas. */
+.glomerulus-controls { background: #fff; border: 1px solid #e0d8cf; border-radius: 8px; padding: 12px; }
+.glomerulus-heading { display: flex; align-items: center; justify-content: space-between; gap: 6px; }
+.glomerulus-heading h3 { margin: 0; color: #8c2626; font-size: .82rem; }
+.glomerulus-heading span { font-size: .60rem; padding: 3px 5px; border-radius: 5px; background: #f1e7de; color: #7a5744; white-space: nowrap; }
+#filtration-flow-state { color: #8c2626; font-size: .86rem; font-weight: 700; margin-top: 8px; }
+#filtration-glucose-state { font-size: .74rem; color: #ad621c; }
+.glomerulus-summary { display: flex; align-items: center; justify-content: space-between; margin-top: 10px; font-size: .75rem; }
+.glomerulus-summary strong { color: #8c2626; }
+#filtration-fraction { font-size: .67rem; color: #217f84; margin: 5px 0 10px; }
+.link-starling { display: flex; align-items: center; gap: 7px; font-size: .73rem; color: #554943; font-weight: 600; }
+.link-starling input { accent-color: #8c2626; }
+.glomerulus-controls .glomerulus-hint { font-size: .63rem; line-height: 1.4; color: #82746b; margin-top: 6px; }
+.glomerulus-events { display: flex; justify-content: space-between; gap: 6px; border-top: 1px solid #eee7e0; border-bottom: 1px solid #eee7e0; margin: 12px 0; padding: 9px 0; }
+.glomerulus-events > div { display: flex; flex-direction: column; gap: 3px; }
+.glomerulus-events span { font-size: .64rem; color: #71635b; }
+.glomerulus-events strong { font-size: 1.2rem; color: #d97724; }
+#glomerulus-continued { color: #217f84; }
+#glomerulus-opacity { width: 100%; margin-top: 8px; accent-color: #d97724; }
+.glomerulus-controls .simulation-actions { margin-top: 12px; }
+#filtration-pause { color: #fff; background: #8c2626; border-color: #8c2626; }
+.filtration-legend { position: absolute; bottom: 16px; left: 16px; display: flex; gap: 12px;
+  background: rgba(249,247,244,.94); border: 1px solid #e0d8cf; border-radius: 7px; padding: 8px 10px; z-index: 3; pointer-events: none; }
+.filtration-legend span { display: flex; align-items: center; gap: 5px; color: #66554b; font-size: .72rem; }
+.filtration-legend i { width: 8px; height: 8px; border-radius: 50%; }
+.legend-blood { background: #a51129; }.legend-filtrate { background: #43bcb0; }.legend-glucose { background: #ff9e25; }
+
+.preset-pill:disabled { opacity: .45; cursor: not-allowed; }
+
+/* Portada y páginas informativas */
+.home-nav-btn { width: auto; min-width: 84px; padding: 0 10px; border-radius: 18px; gap: 5px; font-size: .8rem; }
+.home-nav-btn span:first-child { font-size: 1.1rem; line-height: 1; }
+.landing-screen { display: none; position: absolute; inset: 0; z-index: 8; align-items: center; padding: 28px 5vw; pointer-events: none; }
+#app.landing-active .nav-tabs, #app.landing-active .top-actions,
+#app.landing-active .toolbar-left, #app.landing-active .info-panel-right { display: none; }
+#app.landing-active .landing-screen { display: flex; }
+#app.landing-active .canvas-container { width: 100%; }
+#app.landing-active .anatomy-model-switch { display: none; }
+.landing-content { width: min(470px, 47vw); max-height: 100%; overflow-y: auto; padding: 30px; border: 1px solid rgba(226, 222, 216, .9);
+  border-radius: 16px; background: rgba(249, 247, 244, .94); box-shadow: 0 16px 48px rgba(56, 38, 31, .13); pointer-events: auto; }
+.landing-page { text-align: left; }
+.landing-eyebrow { color: #8c2626; font-size: .72rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
+.landing-page h1 { margin-top: 8px; color: #2b2b2b; font-size: clamp(1.8rem, 4vw, 2.7rem); line-height: 1.1; }
+.landing-intro, .landing-info-page > p:not(.landing-eyebrow) { margin-top: 10px; color: #655a53; font-size: .92rem; line-height: 1.55; }
+.home-menu { display: grid; gap: 8px; margin-top: 22px; }
+.home-menu-item { width: 100%; display: grid; grid-template-columns: 34px 1fr auto; align-items: center; gap: 10px; padding: 11px 12px; border: 1px solid #e3d9d0;
+  border-radius: 9px; background: rgba(255, 255, 255, .88); color: #443a35; text-align: left; cursor: pointer; transition: border-color .2s, transform .2s, box-shadow .2s; }
+.home-menu-item:hover, .home-menu-item:focus-visible { transform: translateX(3px); border-color: #b7796e; box-shadow: 0 4px 12px rgba(56, 38, 31, .08); }
+.home-menu-icon { width: 30px; height: 30px; display: grid; place-items: center; border-radius: 8px; background: #f3e8e3; color: #8c2626; font-size: 1.1rem; }
+.home-menu-item strong, .home-menu-item small { display: block; }
+.home-menu-item strong { font-size: .9rem; }
+.home-menu-item small { margin-top: 3px; color: #786d65; font-size: .72rem; line-height: 1.35; }
+.home-menu-arrow { color: #8c2626; font-size: 1.05rem; }
+.home-menu-secondary { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 4px; }
+.home-menu-item.secondary { grid-template-columns: 30px 1fr auto; gap: 7px; padding: 9px; }
+.home-menu-item.secondary .home-menu-icon { width: 27px; height: 27px; font-size: .95rem; }
+.home-menu-item.secondary strong { font-size: .8rem; }
+.home-menu-item.secondary small { font-size: .65rem; }
+.landing-info-page { max-width: 430px; }
+.landing-info-page > p + p { margin-top: 12px; }
+.landing-back-btn { margin-top: 22px; padding: 10px 14px; border: 1px solid #8c2626; border-radius: 7px; background: #8c2626; color: #fff; font-size: .82rem; font-weight: 600; cursor: pointer; }
+.landing-back-btn:hover { background: #6f2020; }
+.library-list { display: grid; gap: 9px; margin-top: 18px; list-style: none; }
+.library-list li { display: grid; gap: 3px; padding: 10px 12px; border-left: 3px solid #c68155; border-radius: 4px; background: rgba(255, 255, 255, .85); text-align: left; }
+.library-list strong { color: #493a33; font-size: .84rem; }
+.library-list span { color: #786d65; font-size: .75rem; line-height: 1.4; }
+.library-actions { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 14px; }
+.library-actions button { padding: 7px 9px; border: 1px solid #d8cfc4; border-radius: 6px; background: #fff; color: #6f2020; font-size: .72rem; font-weight: 600; cursor: pointer; }
+.library-actions button:hover { border-color: #8c2626; background: #f6e9e7; }
+
+@media (max-width: 650px) {
+  .landing-screen { align-items: flex-start; padding: 16px 12px; }
+  .landing-content { width: min(100%, 320px); max-height: 100%; margin: 0; padding: 16px; background: rgba(249, 247, 244, .94); }
+  .landing-page h1 { font-size: 1.85rem; }
+  .landing-intro { font-size: .82rem; }
+  .home-menu { gap: 6px; margin-top: 15px; }
+  .home-menu-item { padding: 8px 9px; }
+  .home-menu-item strong { font-size: .82rem; }
+  .home-menu-item small { font-size: .66rem; }
+  .home-menu-item.secondary { padding: 8px 6px; }
+}
+
+/* Exploración anatómica de riñón y glomérulo */
+[hidden] { display: none !important; }
+.anatomy-model-switch {
+  position: absolute; right: 18px; bottom: 18px; z-index: 5;
+  width: 172px; padding: 10px; border: 1px solid #d8cfc4; border-radius: 12px;
+  background: #f9f7f4; color: #8c2626; cursor: pointer;
+  box-shadow: 0 5px 20px #38261f1c; text-align: left;
+}
+.anatomy-model-switch:hover:not(:disabled), .anatomy-model-switch:focus-visible { border-color: #8c2626; }
+.anatomy-model-switch:disabled { cursor: wait; }
+.model-switch-eyebrow { display: block; font-size: .65rem; font-weight: 600; color: #73665d; }
+#alternate-model-canvas { display: block; width: 150px; height: 122px; border-radius: 7px; margin: 7px 0; pointer-events: none; }
+#alternate-model-name { font-weight: 700; font-size: .85rem; }
+.model-switch-action { display: block; font-size: .65rem; color: #73665d; margin-top: 3px; }
+.anatomy-part-preview { height: 155px; position: relative; overflow: hidden; }
+#structure-preview-canvas { display: block; width: 100%; height: 100%; touch-action: none; cursor: grab; }
+#structure-preview-canvas:active { cursor: grabbing; }
+#structure-preview-empty { position: absolute; padding: 12px; text-align: center; pointer-events: none; }
+.panel-body .preview-caption { font-size: .65rem; text-align: center; color: #82756b; margin: 5px 0 10px; }
+.structure-list li { display: block; padding: 0; }
+.structure-list button { border: 1px solid transparent; background: transparent; color: #444; width: 100%; padding: 7px 6px; display: flex; align-items: center; gap: 8px; font-size: .8rem; border-radius: 5px; text-align: left; cursor: pointer; }
+.structure-list button:hover, .structure-list button.selected { background: #ebdcd5; color: #8c2626; }
+.structure-list button.selected { border-color: #dfc6bc; font-weight: 600; }
+@media (max-width: 900px) {
+  .anatomy-model-switch { width: 136px; right: 10px; bottom: 10px; padding: 8px; }
+  #alternate-model-canvas { width: 118px; height: 95px; }
+}
+>>>>>>> Stashed changes

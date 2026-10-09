@@ -19,18 +19,82 @@
     <header class="top-bar">
       <div class="logo"><span class="app-title">Atlas renal</span></div>
       <nav class="nav-tabs">
-        <button class="tab-btn active" data-tab="1">Anatomía</button>
-        <button class="tab-btn" data-tab="2">Glucosa</button>
+        <button class="tab-btn" data-tab="1">Fisiología</button>
+        <button class="tab-btn" data-tab="2">Recorrido de la glucosa</button>
         <button class="tab-btn" data-tab="3">Filtración</button>
       </nav>
       <div class="top-actions">
-        <button class="icon-btn" title="Inicio">🏠</button>
+        <button class="icon-btn home-nav-btn" id="btn-home" type="button" aria-label="Regresar a inicio" title="Regresar a inicio"><span aria-hidden="true">⌂</span><span>Inicio</span></button>
         <button class="icon-btn" title="Guardar">💾</button>
         <button class="icon-btn" title="Configuración">⚙️</button>
       </div>
     </header>
 
     <main class="main-container">
+      <section class="landing-screen" id="landing-screen" aria-label="Inicio de Atlas renal">
+        <div class="landing-content">
+          <section id="home-page" class="landing-page">
+            <p class="landing-eyebrow">Atlas interactivo · Riñón</p>
+            <h1>Explora el riñón</h1>
+            <p class="landing-intro">Aprende cómo funciona el sistema renal con modelos 3D y simulaciones interactivas.</p>
+            <nav class="home-menu" aria-label="Secciones principales">
+              <button class="home-menu-item" type="button" data-module="1">
+                <span class="home-menu-icon" aria-hidden="true">◉</span>
+                <span><strong>Fisiología</strong><small>Explora la anatomía y función renal</small></span>
+                <span class="home-menu-arrow" aria-hidden="true">→</span>
+              </button>
+              <button class="home-menu-item" type="button" data-module="2">
+                <span class="home-menu-icon" aria-hidden="true">↝</span>
+                <span><strong>Recorrido de la glucosa</strong><small>Sigue su filtración y reabsorción</small></span>
+                <span class="home-menu-arrow" aria-hidden="true">→</span>
+              </button>
+              <button class="home-menu-item" type="button" data-module="3">
+                <span class="home-menu-icon" aria-hidden="true">⌁</span>
+                <span><strong>Filtración</strong><small>Conoce las fuerzas de Starling</small></span>
+                <span class="home-menu-arrow" aria-hidden="true">→</span>
+              </button>
+              <div class="home-menu-secondary">
+                <button class="home-menu-item secondary" type="button" data-page="credits">
+                  <span class="home-menu-icon" aria-hidden="true">✦</span>
+                  <span><strong>Créditos</strong><small>Acerca de este proyecto</small></span>
+                  <span class="home-menu-arrow" aria-hidden="true">→</span>
+                </button>
+                <button class="home-menu-item secondary" type="button" data-page="library">
+                  <span class="home-menu-icon" aria-hidden="true">▤</span>
+                  <span><strong>Biblioteca</strong><small>Consulta los conceptos del atlas</small></span>
+                  <span class="home-menu-arrow" aria-hidden="true">→</span>
+                </button>
+              </div>
+            </nav>
+          </section>
+
+          <section id="credits-page" class="landing-page landing-info-page" aria-labelledby="credits-title" hidden>
+            <p class="landing-eyebrow">Atlas renal · Proyecto educativo</p>
+            <h1 id="credits-title">Créditos</h1>
+            <p>Atlas renal es un recurso interactivo para explorar la anatomía y la fisiología renal mediante modelos tridimensionales y simulaciones.</p>
+            <p>Este proyecto reúne contenidos de fisiología, recorrido de la glucosa y filtración glomerular en una experiencia de aprendizaje visual.</p>
+            <button class="landing-back-btn" type="button" data-page="home">← Regresar a inicio</button>
+          </section>
+
+          <section id="library-page" class="landing-page landing-info-page" aria-labelledby="library-title" hidden>
+            <p class="landing-eyebrow">Guía de consulta</p>
+            <h1 id="library-title">Biblioteca</h1>
+            <p>Repasa los conceptos principales y abre una sección del atlas para explorarlos.</p>
+            <ul class="library-list">
+              <li><strong>Fisiología renal</strong><span>Anatomía y función de las estructuras del riñón.</span></li>
+              <li><strong>Glucosa</strong><span>Carga filtrada, reabsorción tubular y excreción urinaria.</span></li>
+              <li><strong>Filtración glomerular</strong><span>Presión neta y fuerzas de Starling.</span></li>
+            </ul>
+            <div class="library-actions">
+              <button type="button" data-module="1">Fisiología</button>
+              <button type="button" data-module="2">Recorrido de la glucosa</button>
+              <button type="button" data-module="3">Filtración</button>
+            </div>
+            <button class="landing-back-btn" type="button" data-page="home">← Regresar a inicio</button>
+          </section>
+        </div>
+      </section>
+
       <aside class="toolbar-left">
         <button class="tool-btn active" id="btn-select">
           <span class="icon">↖</span><span class="label">Seleccionar</span>

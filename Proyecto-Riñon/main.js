@@ -38,8 +38,15 @@ controls.dampingFactor = 0.05;
 
 // --- VARIABLES DE MODELOS ---
 let kidneyModel = null;
+<<<<<<< Updated upstream
 let nephronModel = null;
 let currentActiveTab = '1';
+=======
+let glomerulusAnatomy = null;
+let anatomyKind = 'kidney';
+let anatomyBrowser = null;
+let currentActiveTab = 'home';
+>>>>>>> Stashed changes
 let isCutViewActive = false;
 let isXrayActive = false;
 let nephronFlow = null;
@@ -279,8 +286,14 @@ Promise.all(
     scene.add(kidneyModel);
     setCutView(isCutViewActive);
     setXrayMode(isXrayActive);
+<<<<<<< Updated upstream
     kidneyModel.visible = currentActiveTab === '1';
     if (currentActiveTab === '1') focusCameraOn(kidneyModel);
+=======
+    kidneyModel.visible = (currentActiveTab === '1' && anatomyKind === 'kidney') || currentActiveTab === 'home';
+    anatomyBrowser.setModel('kidney', kidneyModel);
+    if (kidneyModel.visible) focusCameraOn(kidneyModel, currentActiveTab === 'home' ? 'landing' : 'center');
+>>>>>>> Stashed changes
   })
   .catch((err) => console.error('❌ Error al cargar las piezas del riñón:', err));
 
@@ -299,14 +312,28 @@ loader.load(
   (err) => console.error('❌ Error al cargar ./Models/nefrona (1).glb:', err)
 );
 
-function focusCameraOn(model) {
+function focusCameraOn(model, alignment = 'center') {
   if (!model) return;
   const box = new THREE.Box3().setFromObject(model);
   const size = box.getSize(new THREE.Vector3());
   const maxDim = Math.max(size.x, size.y, size.z);
+<<<<<<< Updated upstream
   const distance = maxDim > 0 ? maxDim * 2.2 : 10;
   camera.position.set(0, 0, distance);
   controls.target.set(0, 0, 0);
+=======
+  const center = box.getCenter(new THREE.Vector3());
+  const verticalFov = THREE.MathUtils.degToRad(camera.fov);
+  const horizontalFov = 2 * Math.atan(Math.tan(verticalFov / 2) * camera.aspect);
+  const distance = maxDim > 0 ? maxDim / (2 * Math.tan(Math.min(verticalFov, horizontalFov) / 2)) * 1.22 : 10;
+  const horizontalOffset = alignment === 'landing'
+    ? Math.min(maxDim * 1.1, distance * Math.tan(horizontalFov / 2) * .34)
+    : 0;
+  const verticalOffset = alignment === 'landing' && camera.aspect < .75 ? maxDim * .55 : 0;
+  const target = center.clone().add(new THREE.Vector3(-horizontalOffset, verticalOffset, 0));
+  camera.position.copy(target).add(new THREE.Vector3(0, 0, distance));
+  controls.target.copy(target);
+>>>>>>> Stashed changes
   controls.update();
 }
 
@@ -479,7 +506,12 @@ let isolatedMaterial = null;
 let isolatedModel = null;
 
 function getActiveModel() {
+<<<<<<< Updated upstream
   return currentActiveTab === '1' ? kidneyModel : nephronModel;
+=======
+  if (currentActiveTab === 'home') return null;
+  return currentActiveTab === '1' ? (anatomyKind === 'kidney' ? kidneyModel : glomerulusAnatomy) : currentActiveTab === '2' ? glucoseModule.anatomy : filtrationModule.anatomy;
+>>>>>>> Stashed changes
 }
 
 function isVisibleInHierarchy(object) {
@@ -911,6 +943,24 @@ const tabBtns = document.querySelectorAll('.tab-btn');
 function switchModule(id) {
   restoreIsolation();
   currentActiveTab = id;
+<<<<<<< Updated upstream
+=======
+  document.querySelector('#app').classList.remove('landing-active');
+  document.querySelector('#app').dataset.page = 'module';
+  updateCutOnlyTools();
+  if (document.querySelector('.tool-btn.requires-cut.active')) {
+    document.querySelectorAll('.tool-btn').forEach(button => button.classList.remove('active'));
+    previousToolButton = document.querySelector('#btn-select');
+    previousToolButton.classList.add('active');
+    activeToolId = 'btn-select';
+  }
+  glucoseModule.setActive(id === '2');
+  filtrationModule.setActive(id === '3');
+  document.querySelector('#filtration-loading').hidden = id !== '3' || !!filtrationModule.simulation;
+  document.querySelector('#glucose-loading').hidden = id !== '2' || !!glucoseModule.simulation;
+  infoPanel.classList.remove('hidden');
+  document.querySelector('#btn-panel').setAttribute('aria-expanded', 'true');
+>>>>>>> Stashed changes
   tabBtns.forEach((btn) => btn.classList.toggle('active', btn.dataset.tab === id));
   formulasManager.switchFormulaModule(id);
 
@@ -926,6 +976,43 @@ function switchModule(id) {
 }
 
 tabBtns.forEach((btn) => btn.addEventListener('click', () => switchModule(btn.dataset.tab)));
+
+function showLandingPage(page = 'home') {
+  if (!['home', 'credits', 'library'].includes(page)) return;
+  restoreIsolation();
+  setDrawingMode(false);
+  currentActiveTab = 'home';
+  document.querySelector('#app').classList.add('landing-active');
+  document.querySelector('#app').dataset.page = page;
+  document.querySelector('#home-page').hidden = page !== 'home';
+  document.querySelector('#credits-page').hidden = page !== 'credits';
+  document.querySelector('#library-page').hidden = page !== 'library';
+  tabBtns.forEach((button) => button.classList.remove('active'));
+  glucoseModule.setActive(false);
+  filtrationModule.setActive(false);
+  document.querySelector('#glucose-loading').hidden = true;
+  document.querySelector('#filtration-loading').hidden = true;
+  document.querySelector('#filtration-pause-notice').hidden = true;
+  document.querySelector('#filtration-legend').hidden = true;
+  document.querySelector('#pause-notice').hidden = true;
+  infoPanel.classList.add('hidden');
+  document.querySelector('#btn-panel').setAttribute('aria-expanded', 'false');
+  formulasManager.switchFormulaModule('home');
+  anatomyBrowser.setActive(false);
+  if (kidneyModel) {
+    kidneyModel.visible = true;
+    focusCameraOn(kidneyModel, 'landing');
+  }
+  if (glomerulusAnatomy) glomerulusAnatomy.visible = false;
+}
+
+document.querySelector('#btn-home').addEventListener('click', () => showLandingPage());
+document.querySelectorAll('[data-module]').forEach((button) => {
+  button.addEventListener('click', () => switchModule(button.dataset.module));
+});
+document.querySelectorAll('[data-page]').forEach((button) => {
+  button.addEventListener('click', () => showLandingPage(button.dataset.page));
+});
 
 // --- TOOLBAR IZQUIERDA ---
 const toolBtns = document.querySelectorAll('.tool-btn');
@@ -980,5 +1067,18 @@ function animate() {
   renderer.render(scene, camera);
 }
 
+<<<<<<< Updated upstream
+=======
+anatomyBrowser = new AnatomyBrowser(selectAnatomyPart, switchAnatomyModel);
+showLandingPage();
+anatomyBrowser.refresh();
+loadGlomerulusAnatomy();
+
+// Read-only handles used to inspect integration without changing the simulation.
+window.atlasRenal = { glucoseModule, filtrationModule, scene, camera, controls,
+  get activeTab() { return currentActiveTab; },
+  get anatomyKind() { return anatomyKind; },
+  get anatomyModel() { return getActiveModel(); } };
+>>>>>>> Stashed changes
 resizeAnnotationCanvas();
 animate();
