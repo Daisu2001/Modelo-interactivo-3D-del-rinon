@@ -530,6 +530,7 @@ button:focus-visible, input:focus-visible { outline: 2px solid #d97724; outline-
 .library-file-actions { display: grid; align-content: start; gap: 8px; min-width: 145px; }
 .library-download-button, .library-view-button { display: flex; align-items: center; justify-content: space-between; gap: 14px; width: 100%; margin-top: 2px; padding: 10px 12px; border: 1px solid #e7dfd8; border-radius: 7px; background: #fff; color: #8c2626; font: inherit; font-size: .76rem; font-weight: 600; text-align: left; text-decoration: none; white-space: nowrap; cursor: pointer; }
 .library-download-button:hover, .library-view-button:hover { border-color: #c79784; background: #fbf6f2; }
+.library-view-button:disabled, .library-view-button:disabled:hover { border-color: #e7dfd8; background: #f1eeeb; color: #9b918b; cursor: not-allowed; }
 .library-download-button:focus-visible, .library-view-button:focus-visible, .library-pdf-close:focus-visible { outline: 2px solid #8c2626; outline-offset: 2px; }
 .library-pdf-dialog { width: min(1200px, calc(100vw - 32px)); height: min(90dvh, 900px); max-width: none; max-height: none; padding: 0; overflow: hidden; border: 1px solid #e7dfd8; border-radius: 12px; background: #f9f7f4; box-shadow: 0 20px 70px rgba(38, 25, 19, .35); }
 .library-pdf-dialog::backdrop { background: rgba(31, 24, 21, .72); }
