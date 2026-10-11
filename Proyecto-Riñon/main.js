@@ -885,6 +885,34 @@ document.querySelector('#btn-library').addEventListener('click', () => {
   document.body.classList.add('library-screen-open');
 });
 document.querySelector('#btn-library-home').addEventListener('click', showHome);
+const libraryPdfDialog = document.querySelector('#library-pdf-dialog');
+const libraryPdfFrame = document.querySelector('#library-pdf-frame');
+const libraryPdfTitle = document.querySelector('#library-pdf-title');
+let libraryPdfTrigger = null;
+
+document.querySelectorAll('.library-view-button').forEach((button) => {
+  button.addEventListener('click', () => {
+    const file = button.closest('.library-file');
+    const title = file.querySelector('summary strong').textContent.trim();
+
+    libraryPdfTrigger = button;
+    libraryPdfTitle.textContent = title;
+    libraryPdfFrame.title = `Visor PDF: ${title}`;
+    libraryPdfFrame.src = button.dataset.previewUrl;
+    libraryPdfDialog.showModal();
+  });
+});
+
+document.querySelector('#library-pdf-close').addEventListener('click', () => {
+  libraryPdfDialog.close();
+});
+
+libraryPdfDialog.addEventListener('close', () => {
+  libraryPdfFrame.removeAttribute('src');
+  if (libraryPdfTrigger?.isConnected) libraryPdfTrigger.focus();
+  libraryPdfTrigger = null;
+});
+
 document.querySelectorAll('[data-home-tab]').forEach((button) => {
   button.addEventListener('click', () => {
     document.body.classList.remove('home-screen-open');
