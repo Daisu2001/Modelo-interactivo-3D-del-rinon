@@ -15,23 +15,95 @@
     }
   </script>
 </head>
-<body>
+<body class="home-screen-open">
   <div id="app">
     <header class="top-bar">
       <div class="logo"><span class="app-title">Atlas renal</span></div>
       <nav class="nav-tabs">
-        <button class="tab-btn active" data-tab="1">Anatomía</button>
+        <button class="tab-btn active" data-tab="1">Fisiología</button>
         <button class="tab-btn" data-tab="2">Glucosa</button>
         <button class="tab-btn" data-tab="3">Filtración</button>
       </nav>
       <div class="top-actions">
-        <button class="icon-btn" title="Inicio">🏠</button>
+        <button class="icon-btn" id="btn-home" title="Volver al inicio" aria-label="Volver al inicio">⌂</button>
         <button class="icon-btn" title="Guardar">💾</button>
         <button class="icon-btn" id="btn-panel" title="Mostrar / ocultar panel informativo" aria-label="Mostrar / ocultar panel informativo" aria-expanded="true">☰</button>
       </div>
     </header>
 
     <main class="main-container">
+      <section class="home-intro" aria-labelledby="home-title">
+        <div class="home-brand"><span class="home-brand-mark">R</span><span>ATLAS RENAL</span></div>
+        <p class="home-eyebrow">Explora el cuerpo humano</p>
+        <h1 id="home-title">Un viaje al<br><span>interior del riñón</span></h1>
+        <p class="home-description">Descubre cómo funciona este órgano a través de modelos interactivos y simulaciones.</p>
+
+        <nav class="home-options" aria-label="Secciones del Atlas renal">
+          <button class="home-option" type="button" data-home-tab="1">
+            <span class="home-option-icon">◉</span>
+            <span class="home-option-copy"><strong>Fisiología</strong><small>Explora el riñón y sus estructuras</small></span>
+            <span class="home-option-arrow" aria-hidden="true">↗</span>
+          </button>
+          <button class="home-option" type="button" data-home-tab="3" data-formula-tab="filtration">
+            <span class="home-option-icon">⌁</span>
+            <span class="home-option-copy"><strong>Filtración</strong><small>Descubre cómo se filtra la sangre</small></span>
+            <span class="home-option-arrow" aria-hidden="true">↗</span>
+          </button>
+          <button class="home-option" type="button" data-home-tab="2">
+            <span class="home-option-icon">⤳</span>
+            <span class="home-option-copy"><strong>Viaje de la glucosa</strong><small>Sigue su recorrido por la nefrona</small></span>
+            <span class="home-option-arrow" aria-hidden="true">↗</span>
+          </button>
+        </nav>
+
+        <div class="home-secondary-options" aria-label="Más recursos">
+          <button class="home-secondary-option" id="btn-library" type="button">
+            <span aria-hidden="true">▤</span> Biblioteca <small>1 PDF</small>
+          </button>
+          <button class="home-secondary-option" type="button" disabled>
+            <span aria-hidden="true">✳</span> Créditos <small>Próximamente</small>
+          </button>
+        </div>
+        <p class="home-footer">Atlas Renal <span>·</span> Aprende explorando</p>
+      </section>
+
+      <section class="library-page" aria-labelledby="library-title">
+        <button class="library-back-button" id="btn-library-home" type="button">
+          <span aria-hidden="true">←</span> Volver a Home
+        </button>
+        <div class="library-content">
+          <p class="home-eyebrow">Recursos de aprendizaje</p>
+          <h1 id="library-title">Biblioteca</h1>
+          <p class="library-description">Material de consulta para acompañar tu recorrido por la fisiología renal.</p>
+          <div class="library-list" aria-label="Lista de documentos PDF">
+            <details class="library-file">
+              <summary>
+                <span class="library-file-icon" aria-hidden="true">PDF</span>
+                <span class="library-file-copy"><strong>Libro de fisiología renal</strong><small>Documento PDF</small></span>
+                <span class="library-file-arrow" aria-hidden="true">⌄</span>
+              </summary>
+              <div class="library-file-details">
+                <div class="library-file-description">
+                  <p>El libro aborda de manera integral los principios biofísicos, anatómicos, celulares y moleculares de la función renal, organizados en estos ejes temáticos:</p>
+                  <ul>
+                    <li><strong>Organización morfofuncional y circulación renal:</strong> arquitectura macroscópica y microscópica de la nefrona (cortical y yuxtamedular), hemodinámica renal, regulación del flujo sanguíneo y distribución del gasto cardíaco.</li>
+                    <li><strong>Dinámica de la filtración glomerular:</strong> ultraestructura de la barrera de filtración (endotelio, membrana basal y podocitos) y fuerzas de Starling que determinan la Tasa de Filtración Glomerular (TFG).</li>
+                    <li><strong>Mecanismos de transporte tubular:</strong> reabsorción y secreción celular de agua, electrolitos (sodio, potasio, cloro, calcio y magnesio) y solutos orgánicos en el túbulo proximal, las asas de Henle, el túbulo distal y el sistema colector.</li>
+                    <li><strong>Regulación del balance hídrico y osmolaridad:</strong> mecanismo multiplicador de contracorriente en la médula renal y acción hormonal —como la hormona antidiurética— en la concentración y dilución de la orina.</li>
+                    <li><strong>Homeostasis ácido-base y endocrina:</strong> control del pH sanguíneo mediante reabsorción de bicarbonato y excreción de protones, además de las funciones endocrinas renales: sistema renina-angiotensina-aldosterona, eritropoyetina y activación de vitamina D.</li>
+                  </ul>
+                </div>
+                <a
+                  class="library-download-button"
+                  href="./PDF/LIBRO%20FISIOLOG%C3%8DA%20RENAL_260324_164305%20%281%29_261010_202919.pdf"
+                  download="Libro de fisiología renal.pdf"
+                >Descargar PDF <span aria-hidden="true">↓</span></a>
+              </div>
+            </details>
+          </div>
+        </div>
+      </section>
+
       <aside class="toolbar-left">
         <button class="tool-btn active" id="btn-select">
           <span class="icon">↖</span><span class="label">Seleccionar</span>

@@ -263,15 +263,16 @@ async function loadGlomerulusAnatomy() {
 }
 
 const anatomyStrokes = { kidney: [], glomerulus: [] };
+const moduleStrokes = { '2': [], '3': [] };
 function switchAnatomyModel() {
   if (currentActiveTab !== '1') return;
   const next = anatomyKind === 'kidney' ? 'glomerulus' : 'kidney';
   const model = next === 'kidney' ? kidneyModel : glomerulusAnatomy;
   if (!model) return;
   restoreIsolation(); setDrawingMode(false);
-  anatomyStrokes[anatomyKind] = strokes.slice();
   anatomyKind = next;
-  strokes.splice(0, strokes.length, ...anatomyStrokes[next]); redrawAnnotations();
+  strokes = getAnnotationLayer('1', next);
+  redrawAnnotations();
   if (kidneyModel) kidneyModel.visible = next === 'kidney';
   glomerulusAnatomy.visible = next === 'glomerulus';
   updateCutOnlyTools();
@@ -353,7 +354,11 @@ let drawingMode = false;
 let eraserMode = false;
 let currentStroke = null;
 let previousToolButton = document.querySelector('#btn-select');
-const strokes = [];
+let strokes = anatomyStrokes.kidney;
+
+function getAnnotationLayer(tab = currentActiveTab, kind = anatomyKind) {
+  return tab === '1' ? anatomyStrokes[kind] : moduleStrokes[tab];
+}
 
 function resizeAnnotationCanvas() {
   const width = Math.max(1, container.clientWidth);
@@ -485,6 +490,8 @@ clearButton.addEventListener('click', () => {
 function resizeCanvas() {
   const width = container.clientWidth;
   const height = container.clientHeight;
+  if (width === 0 || height === 0) return;
+
   const expectedWidth = Math.round(width * renderer.getPixelRatio());
   const expectedHeight = Math.round(height * renderer.getPixelRatio());
   if (canvas.width !== expectedWidth || canvas.height !== expectedHeight) {
@@ -815,6 +822,8 @@ function switchModule(id) {
   restoreIsolation();
   setDrawingMode(false);
   currentActiveTab = id;
+  strokes = getAnnotationLayer();
+  redrawAnnotations();
   updateCutOnlyTools();
   if (document.querySelector('.tool-btn.requires-cut.active')) {
     document.querySelectorAll('.tool-btn').forEach(button => button.classList.remove('active'));
@@ -849,6 +858,41 @@ function switchModule(id) {
 }
 
 tabBtns.forEach((btn) => btn.addEventListener('click', () => switchModule(btn.dataset.tab)));
+
+function showHome() {
+  restoreIsolation();
+  setDrawingMode(false);
+  currentActiveTab = '1';
+  anatomyKind = 'kidney';
+  strokes = getAnnotationLayer();
+  redrawAnnotations();
+  glucoseModule.setActive(false);
+  filtrationModule.setActive(false);
+  if (kidneyModel) kidneyModel.visible = true;
+  if (glomerulusAnatomy) glomerulusAnatomy.visible = false;
+  anatomyBrowser.setKind('kidney');
+  anatomyBrowser.setActive(false);
+  formulasManager.switchFormulaModule('1');
+  tabBtns.forEach((btn) => btn.classList.toggle('active', btn.dataset.tab === '1'));
+  document.body.classList.remove('library-screen-open');
+  document.body.classList.add('home-screen-open');
+  if (kidneyModel) focusCameraOn(kidneyModel);
+}
+
+document.querySelector('#btn-home').addEventListener('click', showHome);
+document.querySelector('#btn-library').addEventListener('click', () => {
+  document.body.classList.remove('home-screen-open');
+  document.body.classList.add('library-screen-open');
+});
+document.querySelector('#btn-library-home').addEventListener('click', showHome);
+document.querySelectorAll('[data-home-tab]').forEach((button) => {
+  button.addEventListener('click', () => {
+    document.body.classList.remove('home-screen-open');
+    switchModule(button.dataset.homeTab);
+    const formulaTab = button.dataset.formulaTab;
+    if (formulaTab) formulasManager.setFormulaSubtab(formulaTab);
+  });
+});
 
 // --- TOOLBAR IZQUIERDA ---
 const toolBtns = document.querySelectorAll('.tool-btn');
