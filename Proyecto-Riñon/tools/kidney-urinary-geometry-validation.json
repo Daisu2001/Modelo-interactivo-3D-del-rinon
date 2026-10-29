@@ -1,0 +1,10 @@
+{
+  "routeSha256": "ac94b1d3d1f802719068e1f525fcf0e3c20977bcb116f1747f18dc7bc5cb7a14",
+  "sourceSha256": "c72beab722ec0a53275287ca5bd2eca8c7d9bde543f4ce585350a4aab2d58c1f",
+  "routes": 7,
+  "sampleSpacing": 0.00075,
+  "centerSamples": 27270,
+  "envelopeSamples": 709020,
+  "outsideCenters": 0,
+  "outsideEnvelope": 0
+}

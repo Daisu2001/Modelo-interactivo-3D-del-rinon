@@ -1,10 +1,10 @@
 {
   "name": "modelo-interactivo-rinon",
-  "version": "3.1.0",
+  "version": "3.3.0",
   "private": true,
   "scripts": {
     "start": "node Proyecto-Riñon/server.mjs",
-    "test": "node Proyecto-Riñon/tools/verify.mjs && node Proyecto-Riñon/tools/verify-glomerulus.mjs"
+    "test": "node Proyecto-Riñon/tools/verify.mjs && node Proyecto-Riñon/tools/verify-glomerulus.mjs && node Proyecto-Riñon/tools/verify-nephron.mjs && node Proyecto-Riñon/tools/verify-kidney-journey.mjs && node Proyecto-Riñon/tools/verify-kidney-glucosuria.mjs && node Proyecto-Riñon/tools/verify-kidney-blood-direction.mjs && node Proyecto-Riñon/tools/verify-glomerulus-asset.mjs && node Proyecto-Riñon/tools/verify-glomerulus-return.mjs && node Proyecto-Riñon/tools/verify-nephron85.mjs && node Proyecto-Riñon/tools/verify-viewer-ui.mjs && node Proyecto-Riñon/tools/verify-filtration-ui.mjs && node Proyecto-Riñon/tools/verify-formula-live.mjs && node Proyecto-Riñon/tools/verify-screenshot.mjs"
   },
   "engines": {
     "node": ">=18"

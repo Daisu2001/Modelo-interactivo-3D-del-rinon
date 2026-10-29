@@ -2,12 +2,12 @@ import * as THREE from './vendor/three.module.js';
 
 // COLOR_0 está en espacio lineal; la guía del artista usa colores sRGB.
 export const GLOMERULUS_STRUCTURES = [
-  { key: '80,0,84', name: 'Arteriola aferente', color: '#98009B', opacity: .40,
+  { key: '204,74,10', name: 'Arteriola aferente', color: '#E79338', opacity: .40,
     description: 'Pequeño vaso que lleva la sangre hacia los capilares del glomérulo.',
     function: 'Aporta sangre al glomérulo y ayuda a regular el flujo y la presión de filtración.' },
-  { key: '204,74,10', name: 'Arteriola eferente', color: '#E79338', opacity: .40,
+  { key: '80,0,84', name: 'Arteriola eferente', color: '#98009B', opacity: .40,
     description: 'Vaso por el que la sangre sale del glomérulo después de la filtración.',
-    function: 'Conduce la sangre hacia los capilares peritubulares y contribuye a mantener la presión glomerular.' },
+    function: 'Conduce la sangre hacia los capilares peritubulares, donde vuelve la glucosa reabsorbida del túbulo proximal. En este modelo, el retorno se representa conectado a sus ramificaciones.' },
   { key: '255,255,255', name: 'Capilares glomerulares', color: '#bd3b52', opacity: .32,
     description: 'Red de pequeños vasos sanguíneos situada dentro de la cápsula de Bowman.',
     function: 'Permite el paso de agua y moléculas pequeñas, como la glucosa, al filtrado; retiene las células sanguíneas y la mayor parte de las proteínas.' },
@@ -22,9 +22,28 @@ export const GLOMERULUS_STRUCTURES = [
     function: 'Ajusta la composición del filtrado mediante transporte de sales y calcio. La región de la mácula densa contribuye a regular la filtración.' }
 ];
 const palette = new Map(GLOMERULUS_STRUCTURES.map(part => [part.key, part]));
+// La pequeña tapa del polo vascular pertenece al vaso ramificado de salida (eferente).
+palette.set('237,181,130', palette.get('80,0,84'));
+
+export const GLOMERULUS_MODEL_ORIGIN = Object.freeze([
+  -.27604222297668457, -.031138598918914795, .05575452744960785
+]);
+
+export function alignGlomerulusModel(model) {
+  // El archivo nuevo une las piezas en la referencia local de Capilares y
+  // añade una rotación/traslación de exportación. Recuperar el marco del Atlas
+  // mantiene alineadas anatomía y rutas sin modificar los vértices ni sus UV.
+  model.traverse(node => {
+    if (!node.isMesh || !node.geometry.getAttribute('color_1')) return;
+    node.position.fromArray(GLOMERULUS_MODEL_ORIGIN);
+    node.quaternion.identity(); node.scale.setScalar(1); node.updateMatrix();
+  });
+  model.updateMatrixWorld(true);
+}
 
 export function prepareGlomerulusMesh(node, materials, { anatomy = false } = {}) {
-  const geometry = node.geometry.clone(), color = geometry.getAttribute('color'), index = geometry.getIndex();
+  const geometry = node.geometry.clone(), color = geometry.getAttribute('color_1') ?? geometry.getAttribute('color'), index = geometry.getIndex();
+  const sourceMaterial = Array.isArray(node.material) ? node.material[0] : node.material;
   const regions = new Map();
   for (let i = 0; i < index.count; i += 3) {
     const v = index.getX(i), key = [color.getX(v), color.getY(v), color.getZ(v)].map(x => Math.round(x * 255)).join(',');
@@ -35,8 +54,12 @@ export function prepareGlomerulusMesh(node, materials, { anatomy = false } = {})
   geometry.clearGroups();
   for (const [key, triangles] of regions) {
     const part = palette.get(key) ?? { name: 'Estructura glomerular', color: '#c8b6a0', opacity: .25 };
-    const material = new THREE.MeshStandardMaterial({ color: part.color, opacity: anatomy ? 1 : part.opacity,
-      roughness: .6, transparent: !anatomy, side: THREE.DoubleSide, depthWrite: anatomy });
+    const material = sourceMaterial?.map ? sourceMaterial.clone()
+      : new THREE.MeshStandardMaterial({ color: part.color, roughness: .6 });
+    // COLOR_1 es una etiqueta de selección; el aspecto lo aportan las texturas.
+    if (material.map) material.color.set(0xffffff);
+    material.vertexColors = false; material.opacity = anatomy ? 1 : part.opacity;
+    material.transparent = !anatomy; material.side = THREE.DoubleSide; material.depthWrite = anatomy;
     material.name = part.name;
     material.userData.baseOpacity = part.opacity;
     material.userData.vertexColorKey = key;

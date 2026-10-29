@@ -1,0 +1,24 @@
+{
+  "sourceSha256": "4e194cea7363be44291c5b56b5dc3542cd47da80fcc811fe05b1664588e73a33",
+  "routesSha256": "b2e774d6383b8e4f24e734d528055f27788ec15aee0a45cdaef2260d8c04c478",
+  "records": [
+    {
+      "name": "vascular",
+      "radiusFraction": 0.78,
+      "centerSamples": 7624,
+      "envelopeSamples": 198224,
+      "outsideCenters": 0,
+      "outsideEnvelope": 0
+    },
+    {
+      "name": "tubular",
+      "radiusFraction": 0.65,
+      "centerSamples": 5842,
+      "envelopeSamples": 151892,
+      "outsideCenters": 0,
+      "outsideEnvelope": 0
+    }
+  ],
+  "outlets": 4,
+  "scope": "Vascular inner lumen; tubular outer envelope with reserved wall clearance. Glomerular and proximal-to-peritubular connections are schematic."
+}

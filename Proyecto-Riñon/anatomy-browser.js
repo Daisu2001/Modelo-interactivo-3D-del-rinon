@@ -1,6 +1,8 @@
 import * as THREE from './vendor/three.module.js';
 import { OrbitControls } from './vendor/OrbitControls.js';
 import { GLOMERULUS_STRUCTURES } from './glomerulus-structures.js';
+import { NEPHRON_STRUCTURES } from './nephron-structures.js';
+import { NEPHRON85_STRUCTURES } from './nephron85-structures.js';
 
 const KIDNEY_STRUCTURES = [
   { name: 'Corteza renal', color: '#a83232', description: 'Capa externa del riñón que contiene los corpúsculos renales y segmentos de los túbulos.', function: 'Aloja la filtración glomerular y parte de la reabsorción y secreción tubular.' },
@@ -11,12 +13,45 @@ const KIDNEY_STRUCTURES = [
   { name: 'Pelvis renal', color: '#c2b093', description: 'Cavidad central con forma de embudo, conectada con el uréter.', function: 'Recibe la orina de los cálices y la conduce al uréter.' },
   { name: 'Arteria renal', color: '#d92b2b', description: 'Vaso sanguíneo que lleva sangre desde la aorta hacia el riñón.', function: 'Aporta la sangre que será filtrada y el oxígeno que necesita el tejido renal.' },
   { name: 'Vena renal', color: '#2b6bd9', description: 'Vaso sanguíneo por el que la sangre sale del riñón.', function: 'Devuelve la sangre a la circulación a través de la vena cava inferior.' },
-  { name: 'Uréter', color: '#e6b800', description: 'Conducto muscular que conecta la pelvis renal con la vejiga.', function: 'Transporta la orina hasta la vejiga mediante contracciones de su pared.' }
+  { name: 'Uréter', color: '#e6b800', description: 'Conducto muscular que conecta la pelvis renal con la vejiga.', function: 'Transporta la orina hasta la vejiga mediante contracciones de su pared.' },
+  { name: 'Sistema colector', color: '#c2b093', description: 'Vista conjunta de los cálices, la pelvis renal y el inicio del uréter. En este GLB, su superficie exterior comparte una región; la vista de corte permite seleccionar sus regiones internas por separado.', function: 'Recoge la orina procedente de las papilas y la conduce hacia el uréter.' }
 ];
+
+const MODELS = {
+  kidney: { label: 'Riñón', parts: KIDNEY_STRUCTURES, initial: 'Corteza renal' },
+  glomerulus: { label: 'Glomérulo', parts: GLOMERULUS_STRUCTURES, initial: 'Capilares glomerulares' },
+  nephron: { label: 'Nefrona', parts: NEPHRON_STRUCTURES, initial: 'Glomérulo' },
+  nephron85: { label: 'Nefrona 85%', parts: NEPHRON85_STRUCTURES, initial: 'Glomérulo' }
+};
 
 function visiblePart(node, root) {
   for (let part = node; part && part !== root; part = part.parent) if (!part.visible) return false;
   return true;
+}
+
+export function getAvailableAnatomyParts(model, parts) {
+  if (!model) return [];
+  const names = new Set(), a = new THREE.Vector3(), b = new THREE.Vector3(), c = new THREE.Vector3();
+  model.traverse(node => {
+    if (!node.isMesh || !visiblePart(node, model)) return;
+    const geometry = node.geometry, position = geometry.getAttribute('position'), index = geometry.getIndex();
+    if (!position) return;
+    const materials = Array.isArray(node.material) ? node.material : [node.material];
+    const groups = geometry.groups.length ? geometry.groups : [{ start: 0, count: index?.count ?? position.count, materialIndex: 0 }];
+    for (const group of groups) {
+      const name = materials[group.materialIndex ?? 0]?.name;
+      if (!name || names.has(name)) continue;
+      for (let i = group.start; i + 2 < group.start + group.count; i += 3) {
+        a.fromBufferAttribute(position, index ? index.getX(i) : i);
+        b.fromBufferAttribute(position, index ? index.getX(i + 1) : i + 1).sub(a);
+        c.fromBufferAttribute(position, index ? index.getX(i + 2) : i + 2).sub(a);
+        if (b.cross(c).lengthSq() > 1e-20) { names.add(name); break; }
+      }
+    }
+  });
+  return parts.filter(part => names.has(part.name) && part.description?.trim() && part.function?.trim()
+    && !/sin identificar|sin clasificar|tentativ|pendiente|no se asigna|no.*identificad/i.test(
+      [part.name, part.description, part.function].join(' ')));
 }
 
 // Extrae solo las caras de la región seleccionada. La caja de la vista previa
@@ -51,7 +86,7 @@ export function extractPreview(model, name = null) {
   return result;
 }
 
-class ModelPreview {
+export class ModelPreview {
   constructor(canvas, interactive = false) {
     this.canvas = canvas;
     this.scene = new THREE.Scene(); this.scene.background = new THREE.Color('#eae5de');
@@ -102,19 +137,27 @@ class ModelPreview {
 export class AnatomyBrowser {
   constructor(onSelect, onSwitch) {
     this.kind = 'kidney'; this.selected = 'Corteza renal'; this.models = {};
+    this.errors = new Set();
     this.onSelect = onSelect;
-    this.button = document.querySelector('#anatomy-model-switch');
+    this.picker = document.querySelector('#anatomy-model-picker');
     this.partPreview = new ModelPreview(document.querySelector('#structure-preview-canvas'), true);
-    this.alternatePreview = new ModelPreview(document.querySelector('#alternate-model-canvas'));
-    this.button.addEventListener('click', onSwitch);
+    this.modelButtons = [...this.picker.querySelectorAll('[data-anatomy-model]')].map(button => {
+      const kind = button.dataset.anatomyModel;
+      button.addEventListener('click', () => onSwitch(kind));
+      return { kind, button, preview: new ModelPreview(button.querySelector('canvas')) };
+    });
   }
-  setModel(kind, model) { this.models[kind] = model; this.refresh(); }
+  setModel(kind, model) { this.models[kind] = model; this.errors.delete(kind); this.refresh(); }
+  setModelError(kind) { this.errors.add(kind); this.refresh(); }
   setKind(kind) {
-    this.kind = kind; this.selected = kind === 'kidney' ? 'Corteza renal' : 'Capilares glomerulares';
+    this.kind = kind; this.selected = MODELS[kind].initial;
     this.refresh();
   }
+  canSelect(name) { return this.parts?.some(part => part.name === name) ?? false; }
   refresh() {
-    this.parts = this.kind === 'kidney' ? KIDNEY_STRUCTURES : GLOMERULUS_STRUCTURES;
+    this.parts = getAvailableAnatomyParts(this.models[this.kind], MODELS[this.kind].parts);
+    if (!this.canSelect(this.selected)) this.selected = this.canSelect(MODELS[this.kind].initial)
+      ? MODELS[this.kind].initial : this.parts[0]?.name ?? null;
     const list = document.querySelector('#structure-list'); list.replaceChildren();
     this.parts.forEach(part => {
       const item = document.createElement('li'), button = document.createElement('button');
@@ -124,15 +167,25 @@ export class AnatomyBrowser {
       button.addEventListener('click', () => this.onSelect(part.name));
       item.append(button); list.append(item);
     });
-    const alternate = this.kind === 'kidney' ? 'glomerulus' : 'kidney';
-    const label = alternate === 'kidney' ? 'Riñón' : 'Glomérulo';
-    this.button.disabled = !this.models[alternate];
-    this.button.setAttribute('aria-label', 'Abrir ' + label.toLowerCase());
-    document.querySelector('#alternate-model-name').textContent = this.button.disabled ? 'Cargando ' + label.toLowerCase() + '…' : label;
-    this.alternatePreview.setModel(this.models[alternate]);
-    this.select(this.selected);
+    this.modelButtons.forEach(({ kind, button, preview }) => {
+      const { label } = MODELS[kind];
+      button.hidden = kind === this.kind;
+      button.disabled = !this.models[kind];
+      button.setAttribute('aria-label', 'Abrir ' + label.toLowerCase());
+      button.querySelector('.model-switch-name').textContent = this.errors.has(kind) ? label + ' no disponible' : button.disabled ? 'Cargando ' + label.toLowerCase() + '…' : label;
+      button.title = this.errors.has(kind) ? 'Recarga la página para reintentar la carga.' : '';
+      // La miniatura muestra las piezas sin atenuación, incluso tras ocultarlas.
+      preview.setModel(this.models[kind]);
+    });
+    document.querySelector('#anatomy-details').hidden = !this.parts.length;
+    document.querySelector('#anatomy-list-section').hidden = !this.parts.length;
+    if (!this.parts.length) {
+      this.partPreview.setModel(null);
+      document.querySelector('#structure-title').textContent = MODELS[this.kind].label;
+    } else if (!this.picker.hidden) this.select(this.selected);
   }
   select(name) {
+    if (!this.canSelect(name)) return false;
     this.selected = name;
     const part = this.parts?.find(part => part.name === name);
     document.querySelector('#structure-title').textContent = name;
@@ -147,9 +200,13 @@ export class AnatomyBrowser {
       const selected = button.dataset.structure === name;
       button.classList.toggle('selected', selected); button.setAttribute('aria-pressed', String(selected));
     });
+    return true;
   }
-  setActive(active) { this.button.hidden = !active; if (active) this.select(this.selected); }
+  setActive(active) { this.picker.hidden = !active; if (active) this.select(this.selected); }
   update() {
-    if (!this.button.hidden) { this.partPreview.update(); this.alternatePreview.update(); }
+    if (!this.picker.hidden) {
+      this.partPreview.update();
+      this.modelButtons.forEach(({ button, preview }) => { if (!button.hidden) preview.update(); });
+    }
   }
 }

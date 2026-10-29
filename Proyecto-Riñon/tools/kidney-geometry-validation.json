@@ -1,0 +1,23 @@
+{
+  "routeSha256": "3a2045ca249112e5a8cf362a422fb0a4e87e986b7725de8decc266fcf25d61cf",
+  "sourceHashes": {
+    "Arteria_Corte.glb": "a2d67f0d81ad80af7ec199acbd668b311e68a4b500e67e85c1b56e69cbf44c05",
+    "Vena_Corte.glb": "6da1d2a4835c9242293f55e203e9b1467d99aca7d388da3c2b25a3edad715f2c",
+    "Caliz_Corte.glb": "c72beab722ec0a53275287ca5bd2eca8c7d9bde543f4ce585350a4aab2d58c1f"
+  },
+  "sampleSpacing": 0.00075,
+  "vessels": {
+    "Arteria_Corte.glb": {
+      "centerSamples": 24132,
+      "envelopeSamples": 627432,
+      "outsideCenters": 0,
+      "outsideEnvelope": 0
+    },
+    "Vena_Corte.glb": {
+      "centerSamples": 24649,
+      "envelopeSamples": 640874,
+      "outsideCenters": 0,
+      "outsideEnvelope": 0
+    }
+  }
+}

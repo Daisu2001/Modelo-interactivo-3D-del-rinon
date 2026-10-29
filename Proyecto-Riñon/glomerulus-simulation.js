@@ -68,24 +68,69 @@ export function glomerularFluid(path, color, fraction, blood = false) {
 export class GlomerulusSimulation {
   constructor(parent, routes) {
     this.group = new THREE.Group(); this.group.name = 'Filtración según fórmulas'; parent.add(this.group);
-    this.paths = routes.capillaries.map(cap => joinRoutes(routes.afferent, cap, routes.efferent));
-    this.afferentLength = new GlomerularPath(routes.afferent.points).length;
+    const afferents = routes.afferents ?? [routes.afferent];
+    const efferents = routes.efferents ?? [routes.efferent];
+    const count = Math.max(afferents.length, routes.capillaries.length, efferents.length);
+    const branches = Array.from({ length: count }, (_, i) => ({
+      afferent: afferents[i % afferents.length], capillary: routes.capillaries[i % routes.capillaries.length],
+      efferent: efferents[i % efferents.length]
+    }));
+    this.paths = branches.map(({ afferent, capillary, efferent }) => joinRoutes(afferent, capillary, efferent));
+    this.afferentLengths = branches.map(({ afferent }) => new GlomerularPath(afferent.points).length);
+    this.afferentOwners = branches.map(({ afferent }) => branches.findIndex(branch => branch.afferent === afferent));
+    this.capillaryLengths = branches.map(({ capillary }) => new GlomerularPath(capillary.points).length);
+    this.capillaryOwners = branches.map(({ capillary }) => branches.findIndex(branch => branch.capillary === capillary));
+    this.afferentLength = this.afferentLengths[0];
+    this.efferents = branches.map(({ efferent }) => new GlomerularPath(efferent.points, efferent.radii));
+    this.efferentOwners = branches.map(({ efferent }) => branches.findIndex(branch => branch.efferent === efferent));
+    this.efferentLengths = this.efferents.map(path => path.length);
+    this.efferentLength = this.efferentLengths[0];
     this.proximal = new GlomerularPath(routes.proximal.points, routes.proximal.radii);
-    this.filterDistances = routes.capillaries.map((cap, i) =>
-      this.afferentLength + new GlomerularPath(cap.points).length * .53);
+    this.reabsorptionDistance = this.proximal.length * (routes.reabsorption?.proximalFraction ?? .38);
+    this.returnJoinDistances = this.efferents.map(path => path.length * (routes.reabsorption?.outletJoinFraction ?? .8));
+    // The model omits the peritubular bed. These short schematic connections
+    // show proximal -> blood; once captured, solute follows the measured lumen.
+    this.reabsorptions = this.efferents.map((path, i) => {
+      const start = this.proximal.getPoint(this.reabsorptionDistance / this.proximal.length);
+      const end = path.getPoint(this.returnJoinDistances[i] / path.length);
+      const c1 = start.clone().add(new THREE.Vector3(0, 1.05, .18));
+      const tangent = path.getTangent(this.returnJoinDistances[i] / path.length);
+      const c2 = end.clone().addScaledVector(tangent, -.35);
+      const curve = new THREE.CubicBezierCurve3(start, c1, c2, end);
+      const points = curve.getPoints(64).map(p => p.toArray());
+      return new GlomerularPath(points, points.map(() => .018));
+    });
+    this.filterDistances = branches.map(({ capillary }, i) =>
+      this.afferentLengths[i] + new GlomerularPath(capillary.points).length * .53);
     this.transfers = this.paths.map((path, i) => {
       const point = path.getPoint(this.filterDistances[i] / path.length);
       const surface = point.clone().add(new THREE.Vector3(path.radiusAt(this.filterDistances[i] / path.length), 0, 0));
       return new GlomerularPath([point.toArray(), surface.toArray(),
         [.72, point.y * .48, .035], routes.proximal.points[0]]);
     });
-    this.bloodFluids = this.paths.map(path => glomerularFluid(path, '#a51129', .50, true));
+    this.bloodFluids = [];
+    const usedBloodRoutes = new Set();
+    branches.forEach(({ afferent, capillary, efferent }) => {
+      let startDistance = 0;
+      for (const route of [afferent, capillary, efferent]) {
+        const path = new GlomerularPath(route.points, route.radii);
+        if (!usedBloodRoutes.has(route)) {
+          usedBloodRoutes.add(route);
+          const mesh = glomerularFluid(path, '#a51129', .50, true);
+          mesh.userData.startDistance = startDistance; this.bloodFluids.push(mesh);
+        }
+        startDistance += path.length;
+      }
+    });
     this.bloodFluids.forEach(mesh => this.group.add(mesh));
     this.filtrateFluid = glomerularFluid(this.proximal, '#43bcb0', .42);
     this.group.add(this.filtrateFluid);
     this.transferFluids = this.transfers.map(path => {
       path.radii = path.points.map(() => .037);
       const mesh = glomerularFluid(path, '#43bcb0', .65); this.group.add(mesh); return mesh;
+    });
+    this.reabsorptionFluids = this.reabsorptions.map(path => {
+      const mesh = glomerularFluid(path, '#43bcb0', .40); this.group.add(mesh); return mesh;
     });
     const bloodGeometry = new THREE.SphereGeometry(1, 10, 8);
     const pos = bloodGeometry.attributes.position;
@@ -114,8 +159,10 @@ export class GlomerulusSimulation {
   }
   reset() {
     this.elapsed = 0; this.spawnCredit = 0; this.filterCredit = 0; this.reabsorbCredit = 0;
-    this.serial = 0; this.flowStarted = [false, false, false]; this.particles = []; this.filtered = 0; this.absorbed = 0; this.continued = 0; this.unfiltered = 0;
-    this.filtrateFront = 0; this.transferFronts = [0, 0, 0]; this.updateFluids(); this.draw();
+    this.serial = 0; this.flowStarted = this.paths.map(() => false); this.particles = []; this.filtered = 0; this.absorbed = 0; this.continued = 0; this.unfiltered = 0;
+    this.filtrateFront = 0; this.transferFronts = this.paths.map(() => 0);
+    this.returnFlowStarted = this.paths.map(() => false); this.returnFronts = this.paths.map(() => 0);
+    this.updateFluids(); this.draw();
   }
   emit() { this.particles.push({ id: this.serial++, branch: this.serial % this.paths.length,
     stage: 'blood', distance: 0, transfer: 0, decided: false, reabsorptionDecided: false }); }
@@ -144,8 +191,22 @@ export class GlomerulusSimulation {
         p.reabsorb = this.reabsorbCredit >= 1 - 1e-9;
         if (p.reabsorb) this.reabsorbCredit = Math.max(0, this.reabsorbCredit - 1);
       }
-      if (p.reabsorb && u >= .38) { p.stage = 'removed'; this.absorbed++; }
+      if (p.reabsorb && p.distance >= this.reabsorptionDistance) {
+        const remainingTime = (p.distance - this.reabsorptionDistance) / state.filtrateSpeed;
+        p.stage = 'reabsorption'; p.transfer = remainingTime * this.bloodSpeed;
+        this.returnFlowStarted[p.branch] = true;
+      }
       else if (u >= 1) { p.stage = 'removed'; this.continued++; }
+    } else if (p.stage === 'reabsorption') {
+      p.transfer += dt * this.bloodSpeed;
+      const path = this.reabsorptions[p.branch];
+      if (p.transfer >= path.length) {
+        p.stage = 'return-blood';
+        p.distance = this.returnJoinDistances[p.branch] + p.transfer - path.length;
+      }
+    } else if (p.stage === 'return-blood') {
+      p.distance += dt * this.bloodSpeed;
+      if (p.distance >= this.efferentLengths[p.branch]) { p.stage = 'removed'; this.absorbed++; }
     }
   }
   update(dt) {
@@ -170,13 +231,17 @@ export class GlomerulusSimulation {
           this.filtrateFront = Math.min(this.proximal.length, this.filtrateFront + step * this.state.filtrateSpeed);
         }
       }
+      this.reabsorptions.forEach((path, i) => {
+        if (this.returnFlowStarted[i]) this.returnFronts[i] = Math.min(path.length,
+          this.returnFronts[i] + step * this.bloodSpeed);
+      });
     }
     this.updateFluids(); this.draw();
   }
   updateFluids() {
     this.bloodFluids.forEach(mesh => {
       mesh.material.uniforms.time.value = this.elapsed;
-      mesh.material.uniforms.front.value = this.elapsed * this.bloodSpeed;
+      mesh.material.uniforms.front.value = this.elapsed * this.bloodSpeed - mesh.userData.startDistance;
     });
     this.filtrateFluid.material.uniforms.time.value = this.elapsed;
     this.filtrateFluid.material.uniforms.front.value = this.filtrateFront;
@@ -184,39 +249,68 @@ export class GlomerulusSimulation {
       mesh.material.uniforms.time.value = this.elapsed;
       mesh.material.uniforms.front.value = this.transferFronts[i];
     });
+    this.reabsorptionFluids.forEach((mesh, i) => {
+      mesh.material.uniforms.time.value = this.elapsed;
+      mesh.material.uniforms.speed.value = this.bloodSpeed;
+      mesh.material.uniforms.front.value = this.returnFronts[i];
+    });
   }
   position(p) {
     if (p.stage === 'blood') return this.paths[p.branch].getPoint(p.distance / this.paths[p.branch].length);
     if (p.stage === 'filtration') return this.transfers[p.branch].getPoint(p.transfer / this.transfers[p.branch].length);
+    if (p.stage === 'return-blood') return this.efferents[p.branch].getPoint(p.distance / this.efferentLengths[p.branch]);
+    if (p.stage === 'reabsorption') {
+      const u = clamp(p.transfer / this.reabsorptions[p.branch].length, 0, 1);
+      return this.reabsorptions[p.branch].getPoint(u).addScaledVector(this.proximalOffset(p), 1 - u);
+    }
     const point = this.proximal.getPoint(p.distance / this.proximal.length);
-    return point.add(new THREE.Vector3(0, .05 * Math.sin(p.id * 2.4), .045 * Math.cos(p.id * 2.4)));
+    return point.add(this.proximalOffset(p));
   }
+  proximalOffset(p) { return new THREE.Vector3(0, .05 * Math.sin(p.id * 2.4), .045 * Math.cos(p.id * 2.4)); }
   draw() {
     this.glucose.count = this.particles.length;
     this.particles.forEach((p, i) => {
       this.dummy.position.copy(this.position(p)); this.dummy.quaternion.identity();
-      const u = p.distance / this.proximal.length;
-      const fade = p.stage === 'proximal' && p.reabsorb ? 1 - THREE.MathUtils.smoothstep(u, .18, .38) : 1;
-      this.dummy.scale.setScalar((p.stage === 'blood' ? .012 : .023) * fade);
+      let radius = p.stage === 'blood'
+        ? Math.min(.012, this.paths[p.branch].radiusAt(p.distance / this.paths[p.branch].length) * .75) : .023;
+      if (p.stage === 'return-blood') radius = Math.min(.012,
+        this.efferents[p.branch].radiusAt(p.distance / this.efferentLengths[p.branch]) * .75);
+      if (p.stage === 'reabsorption') {
+        const u = p.transfer / this.reabsorptions[p.branch].length;
+        const finalRadius = Math.min(.012, this.efferents[p.branch].radiusAt(
+          this.returnJoinDistances[p.branch] / this.efferentLengths[p.branch]) * .75);
+        radius = THREE.MathUtils.lerp(.023, finalRadius, THREE.MathUtils.smoothstep(u, .6, 1));
+      }
+      this.dummy.scale.setScalar(radius);
       this.dummy.updateMatrix(); this.glucose.setMatrixAt(i, this.dummy.matrix);
     });
     this.glucose.instanceMatrix.needsUpdate = true;
     let count = 0;
     this.paths.forEach((path, branch) => {
-      const end = Math.min(path.length, this.elapsed * this.bloodSpeed);
-      const phase = (this.elapsed * this.bloodSpeed) % .13;
-      for (let d = phase; d < end; d += .13) {
+      const travelled = this.elapsed * this.bloodSpeed;
+      if (travelled <= 0) return;
+      // Each emission advances from its own start time. Wrapping the phase of
+      // the entire row would visibly move cells backwards at each new emission.
+      const first = Math.max(0, Math.ceil((travelled - path.length) / .13));
+      const last = Math.floor(travelled / .13);
+      for (let emission = first; emission <= last; emission++) {
+        const d = travelled - emission * .13;
         // Shared afferent/efferent paths only get one set of blood cells.
-        if (branch > 0 && (d < this.afferentLength || d > path.length - 1.10)) continue;
+        if ((branch !== this.afferentOwners[branch] && d < this.afferentLengths[branch])
+          || (branch !== this.capillaryOwners[branch] && d >= this.afferentLengths[branch]
+            && d < this.afferentLengths[branch] + this.capillaryLengths[branch])
+          || (branch !== this.efferentOwners[branch] && d >= path.length - this.efferentLengths[branch])) continue;
         this.dummy.position.copy(path.getPoint(d / path.length));
         this.dummy.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), path.getTangent(d / path.length));
-        this.dummy.scale.setScalar(.016); this.dummy.updateMatrix();
+        this.dummy.scale.setScalar(Math.min(.016, path.radiusAt(d / path.length) * .6)); this.dummy.updateMatrix();
         this.cells.setMatrixAt(count++, this.dummy.matrix);
       }
     });
     this.cells.count = count; this.cells.instanceMatrix.needsUpdate = true;
   }
   get stats() { return { filtered: this.filtered, absorbed: this.absorbed, continued: this.continued,
-    unfiltered: this.unfiltered, active: this.particles.length, blood: this.particles.filter(p => p.stage === 'blood').length,
-    filtrate: this.particles.filter(p => p.stage !== 'blood').length }; }
+    unfiltered: this.unfiltered, active: this.particles.length,
+    blood: this.particles.filter(p => p.stage === 'blood' || p.stage === 'return-blood').length,
+    filtrate: this.particles.filter(p => p.stage !== 'blood' && p.stage !== 'return-blood').length,
+    returning: this.particles.filter(p => p.stage === 'reabsorption' || p.stage === 'return-blood').length }; }
 }

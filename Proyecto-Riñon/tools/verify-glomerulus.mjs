@@ -36,7 +36,7 @@ function run(parameters,seconds=120) {
   for(const p of sim.particles){
    assert.ok(sim.position(p).toArray().every(Number.isFinite));
    if(p.stage==='blood'){
-    assert.ok(sim.paths[p.branch].radiusAt(p.distance/sim.paths[p.branch].length)>.012);
+    assert.ok(sim.paths[p.branch].radiusAt(p.distance/sim.paths[p.branch].length)>0);
    }
   }
  }

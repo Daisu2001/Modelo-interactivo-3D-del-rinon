@@ -1,0 +1,946 @@
+{
+  "channel": "Medizi · Dr. Eduardo Paiva",
+  "channelUrl": "https://www.youtube.com/@doctor.paiva.",
+  "verifiedOn": "2026-10-14",
+  "ordering": "Listas originales del canal; Neurofisiología ordenada por número de clase y Celular por tema, con potencial de membrana antes de potencial de acción. Se conservan las versiones antiguas identificadas en sus títulos.",
+  "topics": [
+    {
+      "id": "celular",
+      "title": "Fisiología Celular",
+      "playlistId": "PLIuo30Xv6qk8Rt3vg4MlQnIR3QDxshA5K",
+      "playlistUrl": "https://www.youtube.com/playlist?list=PLIuo30Xv6qk8Rt3vg4MlQnIR3QDxshA5K",
+      "videos": [
+        {
+          "id": "fuS6Gm5lFCw",
+          "duration": "31:53",
+          "author": "Ir al canal Medizi",
+          "originalTitle": "Fisiología Celular - La Célula, partes y funciones  (IG:@doctor.paiva)",
+          "title": "Fisiología Celular - La Célula, partes y funciones",
+          "order": 1,
+          "playlistPosition": 1,
+          "watchUrl": "https://www.youtube.com/watch?v=fuS6Gm5lFCw",
+          "section": "Fisiología Celular"
+        },
+        {
+          "id": "zpSu080WGoM",
+          "duration": "21:28",
+          "author": "Ir al canal Medizi",
+          "originalTitle": "Clase 1 Fisiología - Fisiología Celular (VERSIÓN ANTIGUA) (NUEVA VERSIÓN EN LA DESCRIPCIÓN 3.0)",
+          "title": "Clase 1 Fisiología - Fisiología Celular (VERSIÓN ANTIGUA) (NUEVA VERSIÓN EN LA DESCRIPCIÓN 3.0)",
+          "order": 2,
+          "playlistPosition": 2,
+          "watchUrl": "https://www.youtube.com/watch?v=zpSu080WGoM",
+          "section": "Fisiología Celular"
+        },
+        {
+          "id": "3SghKGlzDe4",
+          "duration": "10:24",
+          "author": "Ir al canal Medizi",
+          "originalTitle": "Clase 2 Fisiologia - Ingestión y excreción celular (VERSIÓN ANTIGUA)(NUEVA VERSÓN EN LA DESCRIPCIÓN)",
+          "title": "Clase 2 Fisiologia - Ingestión y excreción celular (VERSIÓN ANTIGUA)(NUEVA VERSÓN EN LA DESCRIPCIÓN)",
+          "order": 3,
+          "playlistPosition": 3,
+          "watchUrl": "https://www.youtube.com/watch?v=3SghKGlzDe4",
+          "section": "Fisiología Celular"
+        },
+        {
+          "id": "bB8oD2AMuAs",
+          "duration": "11:11",
+          "author": "Ir al canal Medizi",
+          "originalTitle": "Fisiología Celular - Ingestión y Excreción celular (Endocitosis y Exocitosis) (IG:@doctor.paiva)",
+          "title": "Fisiología Celular - Ingestión y Excreción celular (Endocitosis y Exocitosis)",
+          "order": 4,
+          "playlistPosition": 4,
+          "watchUrl": "https://www.youtube.com/watch?v=bB8oD2AMuAs",
+          "section": "Fisiología Celular"
+        },
+        {
+          "id": "xQ6edRqWtkM",
+          "duration": "29:00",
+          "author": "Ir al canal Medizi",
+          "originalTitle": "Fisiología Celular - Transporte membrana celular (DIFUSIÓN Y TRANSPORTE ACTIVO) (IG:@doctor.paiva)",
+          "title": "Fisiología Celular - Transporte membrana celular (DIFUSIÓN Y TRANSPORTE ACTIVO)",
+          "order": 5,
+          "playlistPosition": 5,
+          "watchUrl": "https://www.youtube.com/watch?v=xQ6edRqWtkM",
+          "section": "Fisiología Celular"
+        },
+        {
+          "id": "Xz90GiuZ_MQ",
+          "duration": "22:35",
+          "author": "Ir al canal Medizi",
+          "originalTitle": "Clase 3 Fisiología - Transporte a través de la membrana (VERSIÓN ANTIGUA)(NUEVA VERSIÓN DESCRIPCIÓN)",
+          "title": "Clase 3 Fisiología - Transporte a través de la membrana (VERSIÓN ANTIGUA)(NUEVA VERSIÓN DESCRIPCIÓN)",
+          "order": 6,
+          "playlistPosition": 6,
+          "watchUrl": "https://www.youtube.com/watch?v=Xz90GiuZ_MQ",
+          "section": "Fisiología Celular"
+        },
+        {
+          "id": "c0EYAWHHoq8",
+          "duration": "19:38",
+          "author": "Ir al canal Medizi",
+          "originalTitle": "Fisiología Celular - Ósmosis (IG:@doctor.paiva)",
+          "title": "Fisiología Celular - Ósmosis",
+          "order": 7,
+          "playlistPosition": 9,
+          "watchUrl": "https://www.youtube.com/watch?v=c0EYAWHHoq8",
+          "section": "Fisiología Celular"
+        },
+        {
+          "id": "jME6Gy4-PWs",
+          "duration": "8:00",
+          "author": "Ir al canal Medizi",
+          "originalTitle": "Clase 4 Fisiología - Potencial de membrana,equilibrio electroquimico de la célula (IG:@doctor.paiva)",
+          "title": "Clase 4 Fisiología - Potencial de membrana,equilibrio electroquimico de la célula",
+          "order": 8,
+          "playlistPosition": 8,
+          "watchUrl": "https://www.youtube.com/watch?v=jME6Gy4-PWs",
+          "section": "Fisiología Celular"
+        },
+        {
+          "id": "CRGhb5WeNfc",
+          "duration": "15:36",
+          "author": "Ir al canal Medizi",
+          "originalTitle": "Clase 5 Fisiología - Potencial de acción  (IG:@doctor.paiva)",
+          "title": "Clase 5 Fisiología - Potencial de acción",
+          "order": 9,
+          "playlistPosition": 7,
+          "watchUrl": "https://www.youtube.com/watch?v=CRGhb5WeNfc",
+          "section": "Fisiología Celular"
+        }
+      ]
+    },
+    {
+      "id": "muscular",
+      "title": "Fisiología Muscular",
+      "playlistId": "PLIuo30Xv6qk9U8yFNB2Ts-x2EJAlOaD3-",
+      "playlistUrl": "https://www.youtube.com/playlist?list=PLIuo30Xv6qk9U8yFNB2Ts-x2EJAlOaD3-",
+      "videos": [
+        {
+          "id": "gq49ww1Wg1M",
+          "duration": "46:24",
+          "author": "Ir al canal Medizi",
+          "originalTitle": "Clase 7 Fisiología - Contracción del músculo esquelético  (IG:@doctor.paiva)",
+          "title": "Clase 7 Fisiología - Contracción del músculo esquelético",
+          "order": 1,
+          "playlistPosition": 1,
+          "watchUrl": "https://www.youtube.com/watch?v=gq49ww1Wg1M",
+          "section": "Fisiología Muscular"
+        },
+        {
+          "id": "rJyHsZpR5Kc",
+          "duration": "18:06",
+          "author": "Ir al canal Medizi",
+          "originalTitle": "Clase 8 Fisiología - Transmisión neuromuscular (Placa Motora) (IG:@doctor.paiva)",
+          "title": "Clase 8 Fisiología - Transmisión neuromuscular (Placa Motora)",
+          "order": 2,
+          "playlistPosition": 2,
+          "watchUrl": "https://www.youtube.com/watch?v=rJyHsZpR5Kc",
+          "section": "Fisiología Muscular"
+        },
+        {
+          "id": "_iAZ7LBGkhI",
+          "duration": "19:09",
+          "author": "Ir al canal Medizi",
+          "originalTitle": "Clase 9 Fisiología - Contracción y excitación del músculo liso  (IG:@doctor.paiva)",
+          "title": "Clase 9 Fisiología - Contracción y excitación del músculo liso",
+          "order": 3,
+          "playlistPosition": 3,
+          "watchUrl": "https://www.youtube.com/watch?v=_iAZ7LBGkhI",
+          "section": "Fisiología Muscular"
+        }
+      ]
+    },
+    {
+      "id": "neuro",
+      "title": "Neurofisiología",
+      "playlistId": "PLIuo30Xv6qk_MD5plJhxFb7yKf-OM62Cf",
+      "playlistUrl": "https://www.youtube.com/playlist?list=PLIuo30Xv6qk_MD5plJhxFb7yKf-OM62Cf",
+      "videos": [
+        {
+          "id": "902RE8REwu4",
+          "duration": "26:39",
+          "author": "Ir al canal Medizi",
+          "originalTitle": "Clase 10 Fisiología - Neurofisiología Sensitivo 1  (IG:@doctor.paiva)",
+          "title": "Clase 10 Fisiología - Neurofisiología Sensitivo 1",
+          "order": 1,
+          "playlistPosition": 2,
+          "watchUrl": "https://www.youtube.com/watch?v=902RE8REwu4",
+          "section": "Neurofisiología"
+        },
+        {
+          "id": "qKUtweKk6SQ",
+          "duration": "25:02",
+          "author": "Ir al canal Medizi",
+          "originalTitle": "Clase 11 Fisiología - Neurofisiología Sensitivo 2  (IG:@doctor.paiva)",
+          "title": "Clase 11 Fisiología - Neurofisiología Sensitivo 2",
+          "order": 2,
+          "playlistPosition": 1,
+          "watchUrl": "https://www.youtube.com/watch?v=qKUtweKk6SQ",
+          "section": "Neurofisiología"
+        },
+        {
+          "id": "iON4UoJEqr4",
+          "duration": "16:45",
+          "author": "Ir al canal Medizi",
+          "originalTitle": "Clase 12 Fisiología - Neurofisiología Sensitivo 3  (IG:@doctor.paiva)",
+          "title": "Clase 12 Fisiología - Neurofisiología Sensitivo 3",
+          "order": 3,
+          "playlistPosition": 3,
+          "watchUrl": "https://www.youtube.com/watch?v=iON4UoJEqr4",
+          "section": "Neurofisiología"
+        },
+        {
+          "id": "Ala1410q230",
+          "duration": "21:35",
+          "author": "Ir al canal Medizi",
+          "originalTitle": "Clase 13 Fisiología - Neurofisiología Sensitivo 4  (IG:@doctor.paiva)",
+          "title": "Clase 13 Fisiología - Neurofisiología Sensitivo 4",
+          "order": 4,
+          "playlistPosition": 4,
+          "watchUrl": "https://www.youtube.com/watch?v=Ala1410q230",
+          "section": "Neurofisiología"
+        },
+        {
+          "id": "u3X-sMhpYcw",
+          "duration": "10:15",
+          "author": "Ir al canal Medizi",
+          "originalTitle": "Clase 14 Fisiología - Neurofisiología Sensitivo 5  (IG:@doctor.paiva)",
+          "title": "Clase 14 Fisiología - Neurofisiología Sensitivo 5",
+          "order": 5,
+          "playlistPosition": 5,
+          "watchUrl": "https://www.youtube.com/watch?v=u3X-sMhpYcw",
+          "section": "Neurofisiología"
+        },
+        {
+          "id": "PhLPuwT7AhU",
+          "duration": "20:33",
+          "author": "Ir al canal Medizi",
+          "originalTitle": "Clase 15 Fisiología - Vías sensitivas  (IG:@doctor.paiva)",
+          "title": "Clase 15 Fisiología - Vías sensitivas",
+          "order": 6,
+          "playlistPosition": 6,
+          "watchUrl": "https://www.youtube.com/watch?v=PhLPuwT7AhU",
+          "section": "Neurofisiología"
+        }
+      ]
+    },
+    {
+      "id": "cardiaca",
+      "title": "Fisiología Cardíaca",
+      "playlistId": "PLIuo30Xv6qk_7kN-heGOOYGjSf-qQ89tc",
+      "playlistUrl": "https://www.youtube.com/playlist?list=PLIuo30Xv6qk_7kN-heGOOYGjSf-qQ89tc",
+      "videos": [
+        {
+          "id": "G43CsQI9lec",
+          "duration": "20:54",
+          "author": "Ir al canal Medizi",
+          "originalTitle": "Clase 16 Fisiología Cardíaca 1 - Contracción-excitación y Potencial de acción (IG:@doctor.paiva)",
+          "title": "Clase 16 Fisiología Cardíaca 1 - Contracción-excitación y Potencial de acción",
+          "order": 1,
+          "playlistPosition": 1,
+          "watchUrl": "https://www.youtube.com/watch?v=G43CsQI9lec",
+          "section": "Fisiología Cardíaca"
+        },
+        {
+          "id": "K7dWmJn1l0Y",
+          "duration": "18:07",
+          "author": "Ir al canal Medizi",
+          "originalTitle": "Clase 17 Fisiología Cardíaca 2 - Ciclo cardíaco (IG:@doctor.paiva)",
+          "title": "Clase 17 Fisiología Cardíaca 2 - Ciclo cardíaco",
+          "order": 2,
+          "playlistPosition": 2,
+          "watchUrl": "https://www.youtube.com/watch?v=K7dWmJn1l0Y",
+          "section": "Fisiología Cardíaca"
+        },
+        {
+          "id": "eE7ZFlkvT2M",
+          "duration": "14:57",
+          "author": "Ir al canal Medizi",
+          "originalTitle": "Clase 18 Fisiología Cardíaca 3 - Función de las válvulas (IG:@doctor.paiva)",
+          "title": "Clase 18 Fisiología Cardíaca 3 - Función de las válvulas",
+          "order": 3,
+          "playlistPosition": 3,
+          "watchUrl": "https://www.youtube.com/watch?v=eE7ZFlkvT2M",
+          "section": "Fisiología Cardíaca"
+        },
+        {
+          "id": "UQ-_hiySw5s",
+          "duration": "12:40",
+          "author": "Ir al canal Medizi",
+          "originalTitle": "Clase 19 Fisiología Cardíaca 4 - Regulación del bombeo cardíaco (IG:@doctor.paiva)",
+          "title": "Clase 19 Fisiología Cardíaca 4 - Regulación del bombeo cardíaco",
+          "order": 4,
+          "playlistPosition": 4,
+          "watchUrl": "https://www.youtube.com/watch?v=UQ-_hiySw5s",
+          "section": "Fisiología Cardíaca"
+        },
+        {
+          "id": "TnIazO8ZxbU",
+          "duration": "23:19",
+          "author": "Ir al canal Medizi",
+          "originalTitle": "Clase 20 Fisiología Cardíaca 5 - Excitación rítmica del corazón (IG:@doctor.paiva)",
+          "title": "Clase 20 Fisiología Cardíaca 5 - Excitación rítmica del corazón",
+          "order": 5,
+          "playlistPosition": 5,
+          "watchUrl": "https://www.youtube.com/watch?v=TnIazO8ZxbU",
+          "section": "Fisiología Cardíaca"
+        },
+        {
+          "id": "EFPyuU2-_jg",
+          "duration": "57:19",
+          "author": "Ir al canal Medizi",
+          "originalTitle": "Clase 21 Fisiologia - Electrocardiograma Normal",
+          "title": "Clase 21 Fisiologia - Electrocardiograma Normal",
+          "order": 6,
+          "playlistPosition": 6,
+          "watchUrl": "https://www.youtube.com/watch?v=EFPyuU2-_jg",
+          "section": "Fisiología Cardíaca"
+        },
+        {
+          "id": "tEgic-WzEms",
+          "duration": "1:10:11",
+          "author": "Ir al canal Medizi",
+          "originalTitle": "El Electrocardiograma EKG (Como entender) (Live)",
+          "title": "El Electrocardiograma EKG (Como entender) (Live)",
+          "order": 7,
+          "playlistPosition": 7,
+          "watchUrl": "https://www.youtube.com/watch?v=tEgic-WzEms",
+          "section": "Fisiología Cardíaca"
+        },
+        {
+          "id": "XqXl_iudP6g",
+          "duration": "1:39:42",
+          "author": "Ir al canal Medizi",
+          "originalTitle": "Repaso Fisiología Cardíaca (LIVE) (1)",
+          "title": "Repaso Fisiología Cardíaca (LIVE) (1)",
+          "order": 8,
+          "playlistPosition": 8,
+          "watchUrl": "https://www.youtube.com/watch?v=XqXl_iudP6g",
+          "section": "Fisiología Cardíaca"
+        },
+        {
+          "id": "IyAqgJ0w--0",
+          "duration": "20:32",
+          "author": "Ir al canal Medizi",
+          "originalTitle": "Como interpretar un Electrocardiograma (ECG) de forma sistematizada - EKGCASES/LATAM",
+          "title": "Como interpretar un Electrocardiograma (ECG) de forma sistematizada - EKGCASES/LATAM",
+          "order": 9,
+          "playlistPosition": 9,
+          "watchUrl": "https://www.youtube.com/watch?v=IyAqgJ0w--0",
+          "section": "Fisiología Cardíaca"
+        }
+      ]
+    },
+    {
+      "id": "circulatoria",
+      "title": "Fisiología Circulatoria",
+      "playlistId": "PLIuo30Xv6qk_Nl1ftUpVI8_giBjYjTktc",
+      "playlistUrl": "https://www.youtube.com/playlist?list=PLIuo30Xv6qk_Nl1ftUpVI8_giBjYjTktc",
+      "videos": [
+        {
+          "id": "PIfOTiQXB5Q",
+          "duration": "22:24",
+          "author": "Ir al canal Medizi",
+          "originalTitle": "Clase 22 Fisiología Circulatoria - Presión,Flujo y resistencia (IG:@doctor.paiva)",
+          "title": "Clase 22 Fisiología Circulatoria - Presión,Flujo y resistencia",
+          "order": 1,
+          "playlistPosition": 1,
+          "watchUrl": "https://www.youtube.com/watch?v=PIfOTiQXB5Q",
+          "section": "Fisiología Circulatoria"
+        },
+        {
+          "id": "DvJbs7dCUv4",
+          "duration": "21:28",
+          "author": "Ir al canal Medizi",
+          "originalTitle": "Clase 23  Fisiología Circulatoria - Distensibilidad y funciones vasculares (IG:@doctor.paiva)",
+          "title": "Clase 23  Fisiología Circulatoria - Distensibilidad y funciones vasculares",
+          "order": 2,
+          "playlistPosition": 2,
+          "watchUrl": "https://www.youtube.com/watch?v=DvJbs7dCUv4",
+          "section": "Fisiología Circulatoria"
+        },
+        {
+          "id": "XFF7sBemeS8",
+          "duration": "25:51",
+          "author": "Ir al canal Medizi",
+          "originalTitle": "Clase 24 Fisiología Circulatoria-Equilibrio de Starling capilarMicrocirculación (IG:@doctor.paiva)",
+          "title": "Clase 24 Fisiología Circulatoria-Equilibrio de Starling capilarMicrocirculación",
+          "order": 3,
+          "playlistPosition": 3,
+          "watchUrl": "https://www.youtube.com/watch?v=XFF7sBemeS8",
+          "section": "Fisiología Circulatoria"
+        },
+        {
+          "id": "XjlI1oCAeIk",
+          "duration": "17:55",
+          "author": "Ir al canal Medizi",
+          "originalTitle": "Clase 25 Fisiología Circulatoria - Control local del flujo sanguíneo a corto plazo(IG:@doctor.paiva)",
+          "title": "Clase 25 Fisiología Circulatoria - Control local del flujo sanguíneo a corto plazo",
+          "order": 4,
+          "playlistPosition": 4,
+          "watchUrl": "https://www.youtube.com/watch?v=XjlI1oCAeIk",
+          "section": "Fisiología Circulatoria"
+        },
+        {
+          "id": "ttzimrhUc9M",
+          "duration": "7:10",
+          "author": "Ir al canal Medizi",
+          "originalTitle": "Clase 26 Fisiología Circulatoria -Control local del flujo sanguíneo a largo plazo (IG:@doctor.paiva)",
+          "title": "Clase 26 Fisiología Circulatoria -Control local del flujo sanguíneo a largo plazo",
+          "order": 5,
+          "playlistPosition": 5,
+          "watchUrl": "https://www.youtube.com/watch?v=ttzimrhUc9M",
+          "section": "Fisiología Circulatoria"
+        },
+        {
+          "id": "XNLRxNUV3JA",
+          "duration": "7:52",
+          "author": "Ir al canal Medizi",
+          "originalTitle": "Clase 27 Fisiología Circulatoria - Control humoral de la circulación (IG:@doctor.paiva)",
+          "title": "Clase 27 Fisiología Circulatoria - Control humoral de la circulación",
+          "order": 6,
+          "playlistPosition": 6,
+          "watchUrl": "https://www.youtube.com/watch?v=XNLRxNUV3JA",
+          "section": "Fisiología Circulatoria"
+        },
+        {
+          "id": "ZZxR7Pmux24",
+          "duration": "20:05",
+          "author": "Ir al canal Medizi",
+          "originalTitle": "Clase 28 Fisiología Circulatoria - Regulación nerviosa y control rápido de la PA  (IG:@doctor.paiva)",
+          "title": "Clase 28 Fisiología Circulatoria - Regulación nerviosa y control rápido de la PA",
+          "order": 7,
+          "playlistPosition": 7,
+          "watchUrl": "https://www.youtube.com/watch?v=ZZxR7Pmux24",
+          "section": "Fisiología Circulatoria"
+        },
+        {
+          "id": "nb7Scz35qCU",
+          "duration": "10:29",
+          "author": "Ir al canal Medizi",
+          "originalTitle": "Clase 29 Fisiología Circulatoria - Sistema de líquidos Renal-Corporal (IG:@doctor.paiva)",
+          "title": "Clase 29 Fisiología Circulatoria - Sistema de líquidos Renal-Corporal",
+          "order": 8,
+          "playlistPosition": 8,
+          "watchUrl": "https://www.youtube.com/watch?v=nb7Scz35qCU",
+          "section": "Fisiología Circulatoria"
+        },
+        {
+          "id": "jdtUdYUiLJE",
+          "duration": "7:19",
+          "author": "Ir al canal Medizi",
+          "originalTitle": "Clase 30 Fisiología Circulatoria - Sistema Renina-Angiotensina-Aldosterona (IG:@doctor.paiva)",
+          "title": "Clase 30 Fisiología Circulatoria - Sistema Renina-Angiotensina-Aldosterona",
+          "order": 9,
+          "playlistPosition": 9,
+          "watchUrl": "https://www.youtube.com/watch?v=jdtUdYUiLJE",
+          "section": "Fisiología Circulatoria"
+        },
+        {
+          "id": "vumae2a8dUg",
+          "duration": "6:38",
+          "author": "Ir al canal Medizi",
+          "originalTitle": "Clase 31 Fisiología Circulatoria - Resumen de sistemas reguladores de la PA  (IG:@doctor.paiva)",
+          "title": "Clase 31 Fisiología Circulatoria - Resumen de sistemas reguladores de la PA",
+          "order": 10,
+          "playlistPosition": 10,
+          "watchUrl": "https://www.youtube.com/watch?v=vumae2a8dUg",
+          "section": "Fisiología Circulatoria"
+        }
+      ]
+    },
+    {
+      "id": "sanguinea",
+      "title": "Fisiología Sanguínea",
+      "playlistId": "PLIuo30Xv6qk88vtL8elFYuUO3MbyuGU2V",
+      "playlistUrl": "https://www.youtube.com/playlist?list=PLIuo30Xv6qk88vtL8elFYuUO3MbyuGU2V",
+      "videos": [
+        {
+          "id": "2IXChnqIe_I",
+          "duration": "22:21",
+          "author": "Ir al canal Medizi",
+          "originalTitle": "Clase 32 Fisiología Sanguínea - Eritrocitos (IG:@doctor.paiva)",
+          "title": "Clase 32 Fisiología Sanguínea - Eritrocitos",
+          "order": 1,
+          "playlistPosition": 1,
+          "watchUrl": "https://www.youtube.com/watch?v=2IXChnqIe_I",
+          "section": "Fisiología Sanguínea"
+        },
+        {
+          "id": "VIA9Q3nUYhw",
+          "duration": "27:42",
+          "author": "Ir al canal Medizi",
+          "originalTitle": "Clase 33 Fisiología Sanguínea - Leucocitos e Inflamación (IG:@doctor.paiva)",
+          "title": "Clase 33 Fisiología Sanguínea - Leucocitos e Inflamación",
+          "order": 2,
+          "playlistPosition": 2,
+          "watchUrl": "https://www.youtube.com/watch?v=VIA9Q3nUYhw",
+          "section": "Fisiología Sanguínea"
+        },
+        {
+          "id": "UekWvxFixn4",
+          "duration": "28:45",
+          "author": "Ir al canal Medizi",
+          "originalTitle": "Clase 34 Fisiología Sanguínea - Inmunidad (Linfocitos T y B) (IG:@doctor.paiva)",
+          "title": "Clase 34 Fisiología Sanguínea - Inmunidad (Linfocitos T y B)",
+          "order": 3,
+          "playlistPosition": 3,
+          "watchUrl": "https://www.youtube.com/watch?v=UekWvxFixn4",
+          "section": "Fisiología Sanguínea"
+        },
+        {
+          "id": "EasKIpuZ43c",
+          "duration": "9:55",
+          "author": "Ir al canal Medizi",
+          "originalTitle": "Clase 35 Fisiología Sanguínea - Grupos sanguíneos y Factor Rh (IG:@doctor.paiva)",
+          "title": "Clase 35 Fisiología Sanguínea - Grupos sanguíneos y Factor Rh",
+          "order": 4,
+          "playlistPosition": 4,
+          "watchUrl": "https://www.youtube.com/watch?v=EasKIpuZ43c",
+          "section": "Fisiología Sanguínea"
+        },
+        {
+          "id": "doTLEmtCA98",
+          "duration": "22:56",
+          "author": "Ir al canal Medizi",
+          "originalTitle": "Clase 36 Fisiología Sanguínea - Hemostasia y coagulación (Plaquetas) (IG:@doctor.paiva)",
+          "title": "Clase 36 Fisiología Sanguínea - Hemostasia y coagulación (Plaquetas)",
+          "order": 5,
+          "playlistPosition": 5,
+          "watchUrl": "https://www.youtube.com/watch?v=doTLEmtCA98",
+          "section": "Fisiología Sanguínea"
+        }
+      ]
+    },
+    {
+      "id": "respiratoria",
+      "title": "Fisiología Respiratoria",
+      "playlistId": "PLIuo30Xv6qk_Ps0RHFZy0fY18goAeGjJu",
+      "playlistUrl": "https://www.youtube.com/playlist?list=PLIuo30Xv6qk_Ps0RHFZy0fY18goAeGjJu",
+      "videos": [
+        {
+          "id": "QkPfGcdf_40",
+          "duration": "40:37",
+          "author": "Ir al canal Medizi",
+          "originalTitle": "Clase 37 Fisiología Respiratoria - Ventilación Pulmonar (IG:@doctor.paiva) (Diapositivas descrición)",
+          "title": "Clase 37 Fisiología Respiratoria - Ventilación Pulmonar",
+          "order": 1,
+          "playlistPosition": 1,
+          "watchUrl": "https://www.youtube.com/watch?v=QkPfGcdf_40",
+          "section": "Fisiología Respiratoria"
+        },
+        {
+          "id": "2imTce99SQE",
+          "duration": "30:02",
+          "author": "Ir al canal Medizi",
+          "originalTitle": "Clase 38 Fisiología Respiratoria - Circulación Pulmonar (Edema Pulmonar) (IG:@doctor.paiva)",
+          "title": "Clase 38 Fisiología Respiratoria - Circulación Pulmonar (Edema Pulmonar)",
+          "order": 2,
+          "playlistPosition": 2,
+          "watchUrl": "https://www.youtube.com/watch?v=2imTce99SQE",
+          "section": "Fisiología Respiratoria"
+        },
+        {
+          "id": "TAx8n8_qZig",
+          "duration": "27:19",
+          "author": "Ir al canal Medizi",
+          "originalTitle": "Clase 39 Fisiología Respiratoria - Intercambio Gaseoso Pulmonar (Hematosis) (IG:@doctor.paiva)",
+          "title": "Clase 39 Fisiología Respiratoria - Intercambio Gaseoso Pulmonar (Hematosis)",
+          "order": 3,
+          "playlistPosition": 3,
+          "watchUrl": "https://www.youtube.com/watch?v=TAx8n8_qZig",
+          "section": "Fisiología Respiratoria"
+        },
+        {
+          "id": "ja_5T_Uzr4U",
+          "duration": "18:43",
+          "author": "Ir al canal Medizi",
+          "originalTitle": "Clase 40 Fisiología Respiratoria - Coeficiente Ventilación Perfusión (V/Q) (IG:@doctor.paiva)",
+          "title": "Clase 40 Fisiología Respiratoria - Coeficiente Ventilación Perfusión (V/Q)",
+          "order": 4,
+          "playlistPosition": 4,
+          "watchUrl": "https://www.youtube.com/watch?v=ja_5T_Uzr4U",
+          "section": "Fisiología Respiratoria"
+        },
+        {
+          "id": "-pHSkJPTa0s",
+          "duration": "32:47",
+          "author": "Ir al canal Medizi",
+          "originalTitle": "Clase 41 Fisiología Respiratoria - Transporte de O2 y CO2 en la sangre y tejidos (IG:@doctor.paiva)",
+          "title": "Clase 41 Fisiología Respiratoria - Transporte de O2 y CO2 en la sangre y tejidos",
+          "order": 5,
+          "playlistPosition": 5,
+          "watchUrl": "https://www.youtube.com/watch?v=-pHSkJPTa0s",
+          "section": "Fisiología Respiratoria"
+        },
+        {
+          "id": "ZHaKNrqgDjs",
+          "duration": "27:57",
+          "author": "Ir al canal Medizi",
+          "originalTitle": "Clase 42 Fisiología Respiratoria - Regulación de la Respiración (IG:@doctor.paiva)",
+          "title": "Clase 42 Fisiología Respiratoria - Regulación de la Respiración",
+          "order": 6,
+          "playlistPosition": 6,
+          "watchUrl": "https://www.youtube.com/watch?v=ZHaKNrqgDjs",
+          "section": "Fisiología Respiratoria"
+        }
+      ]
+    },
+    {
+      "id": "renal",
+      "title": "Fisiología Renal",
+      "playlistId": "PLIuo30Xv6qk_g1PclgckNiCplYAl9P2m8",
+      "playlistUrl": "https://www.youtube.com/playlist?list=PLIuo30Xv6qk_g1PclgckNiCplYAl9P2m8",
+      "videos": [
+        {
+          "id": "yj_QbY-o57k",
+          "duration": "30:09",
+          "author": "Ir al canal Medizi",
+          "originalTitle": "Clase 55 Fisiología Renal - Anatomía funcional del riñón  (IG:@doctor.paiva)",
+          "title": "Clase 55 Fisiología Renal - Anatomía funcional del riñón",
+          "order": 1,
+          "playlistPosition": 1,
+          "watchUrl": "https://www.youtube.com/watch?v=yj_QbY-o57k",
+          "section": "Bases anatómicas"
+        },
+        {
+          "id": "RMnHCLtUJ5Q",
+          "duration": "13:15",
+          "author": "Ir al canal Medizi",
+          "originalTitle": "Clase 56 Fisiología Renal - Micción urinaria (IG:@doctor.paiva)",
+          "title": "Clase 56 Fisiología Renal - Micción urinaria",
+          "order": 2,
+          "playlistPosition": 2,
+          "watchUrl": "https://www.youtube.com/watch?v=RMnHCLtUJ5Q",
+          "section": "Bases anatómicas"
+        },
+        {
+          "id": "KxMkDBFk8ok",
+          "duration": "23:42",
+          "author": "Ir al canal Medizi",
+          "originalTitle": "Fisiología Renal - Filtración glomerular y flujo sanguíneo renal (IG:@doctor.paiva)",
+          "title": "Fisiología Renal - Filtración glomerular y flujo sanguíneo renal",
+          "order": 3,
+          "playlistPosition": 3,
+          "watchUrl": "https://www.youtube.com/watch?v=KxMkDBFk8ok",
+          "section": "Filtración glomerular"
+        },
+        {
+          "id": "viAa4cJVNBk",
+          "duration": "17:33",
+          "author": "Ir al canal Medizi",
+          "originalTitle": "Fisiología Renal - Control de la Filtración glomerular y flujo sanguíneo (IG:@doctor.paiva)",
+          "title": "Fisiología Renal - Control de la Filtración glomerular y flujo sanguíneo",
+          "order": 4,
+          "playlistPosition": 4,
+          "watchUrl": "https://www.youtube.com/watch?v=viAa4cJVNBk",
+          "section": "Filtración glomerular"
+        },
+        {
+          "id": "pDuvgydiZG8",
+          "duration": "23:37",
+          "author": "Ir al canal Medizi",
+          "originalTitle": "Fisiología Renal - Reabsorción y secreción tubular renal (Introducción) (IG:@doctor.paiva)",
+          "title": "Fisiología Renal - Reabsorción y secreción tubular renal (Introducción)",
+          "order": 5,
+          "playlistPosition": 5,
+          "watchUrl": "https://www.youtube.com/watch?v=pDuvgydiZG8",
+          "section": "Transporte tubular"
+        },
+        {
+          "id": "5VspmTNCsq8",
+          "duration": "7:48",
+          "author": "Ir al canal Medizi",
+          "originalTitle": "Fisiología Renal - Reabsorción y secreción tubular renal (Túbulo Proximal) (IG:@doctor.paiva)",
+          "title": "Fisiología Renal - Reabsorción y secreción tubular renal (Túbulo Proximal)",
+          "order": 6,
+          "playlistPosition": 6,
+          "watchUrl": "https://www.youtube.com/watch?v=5VspmTNCsq8",
+          "section": "Transporte tubular"
+        },
+        {
+          "id": "UJ2Z6eocjMo",
+          "duration": "9:01",
+          "author": "Ir al canal Medizi",
+          "originalTitle": "Fisiología Renal - Reabsorción y secreción tubular renal (Asa de Henle) (IG:@doctor.paiva)",
+          "title": "Fisiología Renal - Reabsorción y secreción tubular renal (Asa de Henle)",
+          "order": 7,
+          "playlistPosition": 7,
+          "watchUrl": "https://www.youtube.com/watch?v=UJ2Z6eocjMo",
+          "section": "Transporte tubular"
+        },
+        {
+          "id": "Sp2pb6sqCiM",
+          "duration": "13:12",
+          "author": "Ir al canal Medizi",
+          "originalTitle": "Fisiología Renal - Reabsorción y secreción tubular renal(Túbulo Distal y Colector)(IG:@doctor.paiva)",
+          "title": "Fisiología Renal - Reabsorción y secreción tubular renal(Túbulo Distal y Colector)",
+          "order": 8,
+          "playlistPosition": 8,
+          "watchUrl": "https://www.youtube.com/watch?v=Sp2pb6sqCiM",
+          "section": "Transporte tubular"
+        },
+        {
+          "id": "Xj1wtZYvkrs",
+          "duration": "19:24",
+          "author": "Ir al canal Medizi",
+          "originalTitle": "Fisiología Renal - Regulación de la reabsorción tubular (IG:@doctor.paiva)",
+          "title": "Fisiología Renal - Regulación de la reabsorción tubular",
+          "order": 9,
+          "playlistPosition": 9,
+          "watchUrl": "https://www.youtube.com/watch?v=Xj1wtZYvkrs",
+          "section": "Transporte tubular"
+        },
+        {
+          "id": "dlcpWIiwpyA",
+          "duration": "26:46",
+          "author": "Ir al canal Medizi",
+          "originalTitle": "Fisiología Renal - Concentración y Dilución orina(Multiplicador contracorriente)(IG:@doctor.paiva)",
+          "title": "Fisiología Renal - Concentración y Dilución orina(Multiplicador contracorriente)",
+          "order": 10,
+          "playlistPosition": 10,
+          "watchUrl": "https://www.youtube.com/watch?v=dlcpWIiwpyA",
+          "section": "Concentración, depuración y agua"
+        },
+        {
+          "id": "L5MFBtiTTcE",
+          "duration": "10:14",
+          "author": "Ir al canal Medizi",
+          "originalTitle": "Fisiología Renal - Aclaramiento de Inulina y Creatinina (Depuración o Clearance) (IG:@doctor.paiva)",
+          "title": "Fisiología Renal - Aclaramiento de Inulina y Creatinina (Depuración o Clearance)",
+          "order": 11,
+          "playlistPosition": 11,
+          "watchUrl": "https://www.youtube.com/watch?v=L5MFBtiTTcE",
+          "section": "Concentración, depuración y agua"
+        },
+        {
+          "id": "Dsa7wYBEs0E",
+          "duration": "20:50",
+          "author": "Ir al canal Medizi",
+          "originalTitle": "Fisiología Renal - ADH (Hormona antidiurética) y Sed (IG:@doctor.paiva)",
+          "title": "Fisiología Renal - ADH (Hormona antidiurética) y Sed",
+          "order": 12,
+          "playlistPosition": 12,
+          "watchUrl": "https://www.youtube.com/watch?v=Dsa7wYBEs0E",
+          "section": "Concentración, depuración y agua"
+        }
+      ]
+    },
+    {
+      "id": "gastrointestinal",
+      "title": "Fisiología Gastrointestinal",
+      "playlistId": "PLIuo30Xv6qk_EAG0kXBphHFMy2Bsa_kGJ",
+      "playlistUrl": "https://www.youtube.com/playlist?list=PLIuo30Xv6qk_EAG0kXBphHFMy2Bsa_kGJ",
+      "videos": [
+        {
+          "id": "v1pARKEh8-M",
+          "duration": "31:12",
+          "author": "Ir al canal Medizi",
+          "originalTitle": "Clase 43 Fisiología Gastrointestinal - Motilidad y Control Nervioso (IG:@doctor.paiva)",
+          "title": "Clase 43 Fisiología Gastrointestinal - Motilidad y Control Nervioso",
+          "order": 1,
+          "playlistPosition": 1,
+          "watchUrl": "https://www.youtube.com/watch?v=v1pARKEh8-M",
+          "section": "Fisiología Gastrointestinal"
+        },
+        {
+          "id": "bCk5N1eZiEk",
+          "duration": "8:54",
+          "author": "Ir al canal Medizi",
+          "originalTitle": "Clase 44 Fisiología Gastrointestinal - Flujo Sanguíneo (IG:@doctor.paiva)",
+          "title": "Clase 44 Fisiología Gastrointestinal - Flujo Sanguíneo",
+          "order": 2,
+          "playlistPosition": 2,
+          "watchUrl": "https://www.youtube.com/watch?v=bCk5N1eZiEk",
+          "section": "Fisiología Gastrointestinal"
+        },
+        {
+          "id": "U0QNwAQnwL0",
+          "duration": "23:15",
+          "author": "Ir al canal Medizi",
+          "originalTitle": "Clase 45 Fisiología Gastrointestinal - Propulsión y Mezcla Parte 1 (1/2) (IG:@doctor.paiva)",
+          "title": "Clase 45 Fisiología Gastrointestinal - Propulsión y Mezcla Parte 1 (1/2)",
+          "order": 3,
+          "playlistPosition": 3,
+          "watchUrl": "https://www.youtube.com/watch?v=U0QNwAQnwL0",
+          "section": "Fisiología Gastrointestinal"
+        },
+        {
+          "id": "e5HmjTeUNQE",
+          "duration": "20:37",
+          "author": "Ir al canal Medizi",
+          "originalTitle": "Clase 46 Fisiología Gastrointestinal - Propulsión y Mezcla Parte 2 (2/2) (IG:@doctor.paiva)",
+          "title": "Clase 46 Fisiología Gastrointestinal - Propulsión y Mezcla Parte 2 (2/2)",
+          "order": 4,
+          "playlistPosition": 4,
+          "watchUrl": "https://www.youtube.com/watch?v=e5HmjTeUNQE",
+          "section": "Fisiología Gastrointestinal"
+        },
+        {
+          "id": "tSPUKt_zxmg",
+          "duration": "10:51",
+          "author": "Ir al canal Medizi",
+          "originalTitle": "Clase 47 Fisiología Gastrointestinal - Principios básicos de la Secreción (IG:@doctor.paiva)",
+          "title": "Clase 47 Fisiología Gastrointestinal - Principios básicos de la Secreción",
+          "order": 5,
+          "playlistPosition": 5,
+          "watchUrl": "https://www.youtube.com/watch?v=tSPUKt_zxmg",
+          "section": "Fisiología Gastrointestinal"
+        },
+        {
+          "id": "ZuRd7meePt0",
+          "duration": "12:36",
+          "author": "Ir al canal Medizi",
+          "originalTitle": "Clase 48 Fisiología Gastrointestinal - Secreción Salival (IG:@doctor.paiva)",
+          "title": "Clase 48 Fisiología Gastrointestinal - Secreción Salival",
+          "order": 6,
+          "playlistPosition": 6,
+          "watchUrl": "https://www.youtube.com/watch?v=ZuRd7meePt0",
+          "section": "Fisiología Gastrointestinal"
+        },
+        {
+          "id": "hwTkz5iyj9Y",
+          "duration": "26:37",
+          "author": "Ir al canal Medizi",
+          "originalTitle": "Clase 49 Fisiología Gastrointestinal - Secreción Gástrica (IG:@doctor.paiva)",
+          "title": "Clase 49 Fisiología Gastrointestinal - Secreción Gástrica",
+          "order": 7,
+          "playlistPosition": 7,
+          "watchUrl": "https://www.youtube.com/watch?v=hwTkz5iyj9Y",
+          "section": "Fisiología Gastrointestinal"
+        },
+        {
+          "id": "7VYF6sbSmzw",
+          "duration": "22:32",
+          "author": "Ir al canal Medizi",
+          "originalTitle": "Clase 50 Fisiología Gastrointestinal - Secreción Pancreática (Páncreas Exocrino) (IG:@doctor.paiva)",
+          "title": "Clase 50 Fisiología Gastrointestinal - Secreción Pancreática (Páncreas Exocrino)",
+          "order": 8,
+          "playlistPosition": 8,
+          "watchUrl": "https://www.youtube.com/watch?v=7VYF6sbSmzw",
+          "section": "Fisiología Gastrointestinal"
+        },
+        {
+          "id": "d4idUGckRiM",
+          "duration": "14:15",
+          "author": "Ir al canal Medizi",
+          "originalTitle": "Clase 51 Fisiología Gastrointestinal - Secreción Biliar (IG:@doctor.paiva)",
+          "title": "Clase 51 Fisiología Gastrointestinal - Secreción Biliar",
+          "order": 9,
+          "playlistPosition": 9,
+          "watchUrl": "https://www.youtube.com/watch?v=d4idUGckRiM",
+          "section": "Fisiología Gastrointestinal"
+        },
+        {
+          "id": "nyuXob6iV_0",
+          "duration": "12:44",
+          "author": "Ir al canal Medizi",
+          "originalTitle": "Clase 52 Fisiología Gastrointestinal - Secreción Intestinal (IG:@doctor.paiva)",
+          "title": "Clase 52 Fisiología Gastrointestinal - Secreción Intestinal",
+          "order": 10,
+          "playlistPosition": 10,
+          "watchUrl": "https://www.youtube.com/watch?v=nyuXob6iV_0",
+          "section": "Fisiología Gastrointestinal"
+        },
+        {
+          "id": "8we4eDSn4cY",
+          "duration": "26:20",
+          "author": "Ir al canal Medizi",
+          "originalTitle": "Clase 53 Fisiología Gastrointestinal - Digestión en el tubo digestivo (IG:@doctor.paiva)",
+          "title": "Clase 53 Fisiología Gastrointestinal - Digestión en el tubo digestivo",
+          "order": 11,
+          "playlistPosition": 11,
+          "watchUrl": "https://www.youtube.com/watch?v=8we4eDSn4cY",
+          "section": "Fisiología Gastrointestinal"
+        },
+        {
+          "id": "3lctzcxj16w",
+          "duration": "28:27",
+          "author": "Ir al canal Medizi",
+          "originalTitle": "Clase 54 Fisiología Gastrointestinal - Absorción en el tubo digestivo (IG:@doctor.paiva)",
+          "title": "Clase 54 Fisiología Gastrointestinal - Absorción en el tubo digestivo",
+          "order": 12,
+          "playlistPosition": 12,
+          "watchUrl": "https://www.youtube.com/watch?v=3lctzcxj16w",
+          "section": "Fisiología Gastrointestinal"
+        }
+      ]
+    },
+    {
+      "id": "endocrina",
+      "title": "Fisiología Endocrina",
+      "playlistId": "PLIuo30Xv6qk_LolpsXcFUPW7H1VsD2MZR",
+      "playlistUrl": "https://www.youtube.com/playlist?list=PLIuo30Xv6qk_LolpsXcFUPW7H1VsD2MZR",
+      "videos": [
+        {
+          "id": "IMLcQflm4_M",
+          "duration": "21:29",
+          "author": "Ir al canal Medizi",
+          "originalTitle": "Fisiología Endocrina - INTRO (HORMONAS, ESTRUCTURA, SÍNTESIS, SECRECIÓN)PARTE 1/3 (IG:@doctor.paiva)",
+          "title": "Fisiología Endocrina - INTRO (HORMONAS, ESTRUCTURA, SÍNTESIS, SECRECIÓN)PARTE 1/3",
+          "order": 1,
+          "playlistPosition": 1,
+          "watchUrl": "https://www.youtube.com/watch?v=IMLcQflm4_M",
+          "section": "Fisiología Endocrina"
+        },
+        {
+          "id": "9CjZ8_kmrKQ",
+          "duration": "13:11",
+          "author": "Ir al canal Medizi",
+          "originalTitle": "Fisiología Endocrina - INTRO (CONTROL, TRANSPORTE, ACLARAMIENTO) PARTE 2/3 (IG:@doctor.paiva)",
+          "title": "Fisiología Endocrina - INTRO (CONTROL, TRANSPORTE, ACLARAMIENTO) PARTE 2/3",
+          "order": 2,
+          "playlistPosition": 2,
+          "watchUrl": "https://www.youtube.com/watch?v=9CjZ8_kmrKQ",
+          "section": "Fisiología Endocrina"
+        },
+        {
+          "id": "oCeTICEuabM",
+          "duration": "45:18",
+          "author": "Ir al canal Medizi",
+          "originalTitle": "Fisiología Endocrina - INTRO (RECEPTORES HORMONALES - MECANISMO ACCIÓN) PARTE 3/3 (IG:@doctor.paiva)",
+          "title": "Fisiología Endocrina - INTRO (RECEPTORES HORMONALES - MECANISMO ACCIÓN) PARTE 3/3",
+          "order": 3,
+          "playlistPosition": 3,
+          "watchUrl": "https://www.youtube.com/watch?v=oCeTICEuabM",
+          "section": "Fisiología Endocrina"
+        },
+        {
+          "id": "xM-TXkjS7Bo",
+          "duration": "38:00",
+          "author": "Ir al canal Medizi",
+          "originalTitle": "Fisiología Endocrina - Eje Hipotálamo Hipófisis (hipotálamo-hipofisario) (IG:@doctor.paiva)",
+          "title": "Fisiología Endocrina - Eje Hipotálamo Hipófisis (hipotálamo-hipofisario)",
+          "order": 4,
+          "playlistPosition": 4,
+          "watchUrl": "https://www.youtube.com/watch?v=xM-TXkjS7Bo",
+          "section": "Fisiología Endocrina"
+        },
+        {
+          "id": "uO3N1cQ4aRc",
+          "duration": "40:09",
+          "author": "Ir al canal Medizi",
+          "originalTitle": "Fisiología Endocrina - Hormona de Crecimiento (GH) e IGF-1 (IG:@doctor.paiva)",
+          "title": "Fisiología Endocrina - Hormona de Crecimiento (GH) e IGF-1",
+          "order": 5,
+          "playlistPosition": 5,
+          "watchUrl": "https://www.youtube.com/watch?v=uO3N1cQ4aRc",
+          "section": "Fisiología Endocrina"
+        },
+        {
+          "id": "KzWPwWosMAk",
+          "duration": "24:37",
+          "author": "Ir al canal Medizi",
+          "originalTitle": "Fisiología Endocrina - Hormonas Tiroideas T3 T4 - Síntesis, Secreción (Parte 1/3) (IG:@doctor.paiva)",
+          "title": "Fisiología Endocrina - Hormonas Tiroideas T3 T4 - Síntesis, Secreción (Parte 1/3)",
+          "order": 6,
+          "playlistPosition": 6,
+          "watchUrl": "https://www.youtube.com/watch?v=KzWPwWosMAk",
+          "section": "Fisiología Endocrina"
+        }
+      ]
+    }
+  ]
+}

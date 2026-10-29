@@ -1,8 +1,9 @@
+import { setControlLabel } from './icons.js';
 import * as THREE from './vendor/three.module.js';
 import { GlomerulusSimulation } from './glomerulus-simulation.js';
 import { calculateRenalState } from './renal-physiology.js';
 
-import { prepareGlomerulusMesh } from './glomerulus-structures.js';
+import { prepareGlomerulusMesh, alignGlomerulusModel } from './glomerulus-structures.js';
 
 export class FiltrationModule {
   constructor(scene) {
@@ -29,6 +30,7 @@ export class FiltrationModule {
     if (!response.ok) throw new Error('No se pudieron cargar las rutas del glomérulo');
     const routes = await response.json();
     this.anatomy = gltf.scene;
+    alignGlomerulusModel(this.anatomy);
     this.anatomy.traverse(node => { if (node.isMesh) prepareGlomerulusMesh(node, this.materials); });
     const multiplier = Number(document.querySelector('#glomerulus-opacity').value) / .2;
     for (const material of this.materials) material.opacity = Math.min(.85, material.userData.baseOpacity * multiplier);
@@ -57,7 +59,7 @@ export class FiltrationModule {
       ? (100 * this.state.reabsorptionFraction).toFixed(1) + '% reabsorbida · ' +
         (100 * this.state.fractionExcreted).toFixed(1) + '% continúa'
       : 'Sin paso de glucosa al filtrado';
-    document.querySelector('#filtration-pause').textContent = this.paused ? 'Continuar' : 'Pausar';
+    setControlLabel(document.querySelector('#filtration-pause'), this.paused ? 'play' : 'pause', this.paused ? 'Continuar' : 'Pausar');
     document.querySelector('#filtration-pause-notice').hidden = !this.active || !this.paused;
     document.querySelector('#filtration-legend').hidden = !this.active;
     this.refreshStats();

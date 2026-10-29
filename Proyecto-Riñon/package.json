@@ -1,11 +1,11 @@
 {
   "name": "atlas-renal-glucosa",
-  "version": "3.1.0",
+  "version": "3.3.0",
   "private": true,
   "type": "module",
   "scripts": {
     "start": "node server.mjs",
-    "test": "node tools/verify.mjs && node tools/verify-glomerulus.mjs"
+    "test": "node tools/verify.mjs && node tools/verify-glomerulus.mjs && node tools/verify-nephron.mjs && node tools/verify-kidney-journey.mjs && node tools/verify-kidney-glucosuria.mjs && node tools/verify-kidney-blood-direction.mjs && node tools/verify-glomerulus-asset.mjs && node tools/verify-glomerulus-return.mjs && node tools/verify-nephron85.mjs && node tools/verify-viewer-ui.mjs && node tools/verify-filtration-ui.mjs && node tools/verify-formula-live.mjs && node tools/verify-screenshot.mjs"
   },
   "engines": {
     "node": ">=18"

@@ -20,14 +20,14 @@
     <header class="top-bar">
       <div class="logo"><span class="app-title">Atlas renal</span></div>
       <nav class="nav-tabs">
-        <button class="tab-btn active" data-tab="1">Fisiología</button>
+        <button class="tab-btn active" data-tab="1">Anatomía</button>
         <button class="tab-btn" data-tab="2">Glucosa</button>
         <button class="tab-btn" data-tab="3">Filtración</button>
       </nav>
       <div class="top-actions">
-        <button class="icon-btn" id="btn-home" title="Volver al inicio" aria-label="Volver al inicio">⌂</button>
-        <button class="icon-btn" title="Guardar">💾</button>
-        <button class="icon-btn" id="btn-panel" title="Mostrar / ocultar panel informativo" aria-label="Mostrar / ocultar panel informativo" aria-expanded="true">☰</button>
+        <button class="icon-btn icon-label-control" id="btn-home" title="Volver al inicio" aria-label="Volver al inicio"><span data-icon="home" aria-hidden="true"></span></button>
+        <button class="icon-btn icon-label-control" type="button" title="Guardar captura (PNG)" id="btn-save" aria-label="Guardar captura de pantalla en PNG"><span data-icon="save" aria-hidden="true"></span></button>
+        <button class="icon-btn icon-label-control" id="btn-panel" title="Mostrar / ocultar panel informativo" aria-label="Mostrar / ocultar panel informativo" aria-expanded="true"><span data-icon="panel" aria-hidden="true"></span></button>
       </div>
     </header>
 
@@ -40,28 +40,28 @@
 
         <nav class="home-options" aria-label="Secciones del Atlas renal">
           <button class="home-option" type="button" data-home-tab="1">
-            <span class="home-option-icon">◉</span>
-            <span class="home-option-copy"><strong>Fisiología</strong><small>Explora el riñón y sus estructuras</small></span>
-            <span class="home-option-arrow" aria-hidden="true">↗</span>
+            <span class="home-option-icon" data-icon="kidney" aria-hidden="true"></span>
+            <span class="home-option-copy"><strong>Anatomía</strong><small>Explora el riñón y sus estructuras</small></span>
+            <span class="home-option-arrow" aria-hidden="true" data-icon="external"></span>
           </button>
           <button class="home-option" type="button" data-home-tab="3" data-formula-tab="filtration">
-            <span class="home-option-icon">⌁</span>
+            <span class="home-option-icon" data-icon="filter" aria-hidden="true"></span>
             <span class="home-option-copy"><strong>Filtración</strong><small>Descubre cómo se filtra la sangre</small></span>
-            <span class="home-option-arrow" aria-hidden="true">↗</span>
+            <span class="home-option-arrow" aria-hidden="true" data-icon="external"></span>
           </button>
           <button class="home-option" type="button" data-home-tab="2">
-            <span class="home-option-icon">⤳</span>
+            <span class="home-option-icon" data-icon="route" aria-hidden="true"></span>
             <span class="home-option-copy"><strong>Viaje de la glucosa</strong><small>Sigue su recorrido por la nefrona</small></span>
-            <span class="home-option-arrow" aria-hidden="true">↗</span>
+            <span class="home-option-arrow" aria-hidden="true" data-icon="external"></span>
           </button>
         </nav>
 
         <div class="home-secondary-options" aria-label="Más recursos">
           <button class="home-secondary-option" id="btn-library" type="button">
-            <span aria-hidden="true">▤</span> Biblioteca <small>6 PDF</small>
+            <span aria-hidden="true" data-icon="book"></span> Biblioteca <small>6 PDF</small>
           </button>
           <button class="home-secondary-option" type="button" disabled>
-            <span aria-hidden="true">✳</span> Créditos <small>Próximamente</small>
+            <span aria-hidden="true" data-icon="spark"></span> Créditos <small>Próximamente</small>
           </button>
         </div>
         <p class="home-footer">Atlas Renal <span>·</span> Aprende explorando</p>
@@ -69,18 +69,26 @@
 
       <section class="library-page" aria-labelledby="library-title">
         <button class="library-back-button" id="btn-library-home" type="button">
-          <span aria-hidden="true">←</span> Volver a Home
+          <span aria-hidden="true" data-icon="left"></span> Volver a Home
         </button>
         <div class="library-content">
           <p class="home-eyebrow">Recursos de aprendizaje</p>
           <h1 id="library-title">Biblioteca</h1>
           <p class="library-description">Material de consulta para acompañar tu recorrido por la fisiología renal.</p>
+          <nav class="library-modules" aria-label="Módulos de Biblioteca" role="tablist">
+            <button class="library-module active" id="library-tab-documents" data-library-tab="documents" role="tab" aria-selected="true" aria-controls="library-documents" type="button"><span class="library-module-number">01</span><strong>Libros y documentos</strong><small>6 documentos · leer y anotar</small></button>
+            <button class="library-module" id="library-tab-diagrams" data-library-tab="diagrams" role="tab" aria-selected="false" aria-controls="library-diagrams" tabindex="-1" type="button"><span class="library-module-number">02</span><strong>Ilustraciones y diagramas</strong><small>3 esquemas · explorar y anotar</small></button>
+            <button class="library-module" id="library-tab-videos" data-library-tab="videos" role="tab" aria-selected="false" aria-controls="library-videos" tabindex="-1" type="button"><span class="library-module-number">03</span><strong>Videos</strong><small>10 temas · clases de Medizi</small></button>
+          </nav>
+          <section id="library-documents" class="library-module-panel" role="tabpanel" aria-labelledby="library-tab-documents">
+          <h2 class="library-section-title">Libros y documentos</h2>
+          <p class="library-section-copy">Abre un documento para leerlo y dibujar tus anotaciones dentro del visor.</p>
           <div class="library-list" aria-label="Lista de documentos PDF">
             <details class="library-file">
               <summary>
-                <span class="library-file-icon" aria-hidden="true">PDF</span>
+                <span class="library-file-icon" aria-hidden="true" data-icon="file"></span>
                 <span class="library-file-copy"><strong>Libro de fisiología renal</strong><small>Documento PDF</small></span>
-                <span class="library-file-arrow" aria-hidden="true">⌄</span>
+                <span class="library-file-arrow" aria-hidden="true" data-icon="down"></span>
               </summary>
               <div class="library-file-details">
                 <div class="library-file-description">
@@ -98,21 +106,16 @@
                   </ul>
                 </div>
                 <div class="library-file-actions">
-                  <button class="library-view-button" type="button" aria-haspopup="dialog" data-preview-url="https://drive.google.com/file/d/1EziEUT0ZxFjd6m4vjUN8swcKzYWDm9hp/preview">Ver documento <span aria-hidden="true">↗</span></button>
-                  <a
-                    class="library-download-button"
-                    href="https://drive.google.com/uc?export=download&amp;id=1EziEUT0ZxFjd6m4vjUN8swcKzYWDm9hp"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >Descargar PDF <span aria-hidden="true">↓</span></a>
+                  <button class="library-view-button" type="button" aria-haspopup="dialog" data-preview-url="https://drive.google.com/file/d/1EziEUT0ZxFjd6m4vjUN8swcKzYWDm9hp/preview">Ver documento <span aria-hidden="true" data-icon="external"></span></button>
+                  <a class="library-download-button icon-label-control" href="https://drive.google.com/uc?export=download&amp;id=1EziEUT0ZxFjd6m4vjUN8swcKzYWDm9hp" target="_blank" rel="noopener noreferrer"><span data-icon="download" aria-hidden="true"></span> Descargar PDF</a>
                 </div>
               </div>
             </details>
             <details class="library-file">
               <summary>
-                <span class="library-file-icon" aria-hidden="true">PDF</span>
+                <span class="library-file-icon" aria-hidden="true" data-icon="file"></span>
                 <span class="library-file-copy"><strong>Berne y Levy. Fisiología</strong><small>Documento PDF</small></span>
-                <span class="library-file-arrow" aria-hidden="true">⌄</span>
+                <span class="library-file-arrow" aria-hidden="true" data-icon="down"></span>
               </summary>
               <div class="library-file-details">
                 <div class="library-file-description">
@@ -128,21 +131,16 @@
                   </ul>
                 </div>
                 <div class="library-file-actions">
-                  <button class="library-view-button" type="button" aria-haspopup="dialog" data-preview-url="https://drive.google.com/file/d/10QJBM-tnsUyB9dNybh94vwWZdjN7kSbH/preview">Ver documento <span aria-hidden="true">↗</span></button>
-                  <a
-                    class="library-download-button"
-                    href="https://drive.google.com/uc?export=download&amp;id=10QJBM-tnsUyB9dNybh94vwWZdjN7kSbH"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >Descargar PDF <span aria-hidden="true">↓</span></a>
+                  <button class="library-view-button" type="button" aria-haspopup="dialog" data-preview-url="https://drive.google.com/file/d/10QJBM-tnsUyB9dNybh94vwWZdjN7kSbH/preview">Ver documento <span aria-hidden="true" data-icon="external"></span></button>
+                  <a class="library-download-button icon-label-control" href="https://drive.google.com/uc?export=download&amp;id=10QJBM-tnsUyB9dNybh94vwWZdjN7kSbH" target="_blank" rel="noopener noreferrer"><span data-icon="download" aria-hidden="true"></span> Descargar PDF</a>
                 </div>
               </div>
             </details>
             <details class="library-file">
               <summary>
-                <span class="library-file-icon" aria-hidden="true">PDF</span>
+                <span class="library-file-icon" aria-hidden="true" data-icon="file"></span>
                 <span class="library-file-copy"><strong>Ganong. Fisiología médica, 26.ª edición</strong><small>Documento PDF</small></span>
-                <span class="library-file-arrow" aria-hidden="true">⌄</span>
+                <span class="library-file-arrow" aria-hidden="true" data-icon="down"></span>
               </summary>
               <div class="library-file-details">
                 <div class="library-file-description">
@@ -158,21 +156,16 @@
                   </ul>
                 </div>
                 <div class="library-file-actions">
-                  <button class="library-view-button" type="button" aria-haspopup="dialog" data-preview-url="https://drive.google.com/file/d/1DpLW8eu8MIDvBtWQzZ9-BuiNPUsOlxQy/preview">Ver documento <span aria-hidden="true">↗</span></button>
-                  <a
-                    class="library-download-button"
-                    href="https://drive.google.com/uc?export=download&amp;id=1DpLW8eu8MIDvBtWQzZ9-BuiNPUsOlxQy"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >Descargar PDF <span aria-hidden="true">↓</span></a>
+                  <button class="library-view-button" type="button" aria-haspopup="dialog" data-preview-url="https://drive.google.com/file/d/1DpLW8eu8MIDvBtWQzZ9-BuiNPUsOlxQy/preview">Ver documento <span aria-hidden="true" data-icon="external"></span></button>
+                  <a class="library-download-button icon-label-control" href="https://drive.google.com/uc?export=download&amp;id=1DpLW8eu8MIDvBtWQzZ9-BuiNPUsOlxQy" target="_blank" rel="noopener noreferrer"><span data-icon="download" aria-hidden="true"></span> Descargar PDF</a>
                 </div>
               </div>
             </details>
             <details class="library-file">
               <summary>
-                <span class="library-file-icon" aria-hidden="true">PDF</span>
+                <span class="library-file-icon" aria-hidden="true" data-icon="file"></span>
                 <span class="library-file-copy"><strong>Guyton y Hall. Tratado de fisiología médica</strong><small>Documento PDF</small></span>
-                <span class="library-file-arrow" aria-hidden="true">⌄</span>
+                <span class="library-file-arrow" aria-hidden="true" data-icon="down"></span>
               </summary>
               <div class="library-file-details">
                 <div class="library-file-description">
@@ -188,21 +181,16 @@
                   </ul>
                 </div>
                 <div class="library-file-actions">
-                  <button class="library-view-button" type="button" aria-haspopup="dialog" data-preview-url="https://drive.google.com/file/d/1ESy3dDgnG0v0Izo0trf7WJnsfFua1-eL/preview">Ver documento <span aria-hidden="true">↗</span></button>
-                  <a
-                    class="library-download-button"
-                    href="https://drive.google.com/uc?export=download&amp;id=1ESy3dDgnG0v0Izo0trf7WJnsfFua1-eL"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >Descargar PDF <span aria-hidden="true">↓</span></a>
+                  <button class="library-view-button" type="button" aria-haspopup="dialog" data-preview-url="https://drive.google.com/file/d/1ESy3dDgnG0v0Izo0trf7WJnsfFua1-eL/preview">Ver documento <span aria-hidden="true" data-icon="external"></span></button>
+                  <a class="library-download-button icon-label-control" href="https://drive.google.com/uc?export=download&amp;id=1ESy3dDgnG0v0Izo0trf7WJnsfFua1-eL" target="_blank" rel="noopener noreferrer"><span data-icon="download" aria-hidden="true"></span> Descargar PDF</a>
                 </div>
               </div>
             </details>
             <details class="library-file">
               <summary>
-                <span class="library-file-icon" aria-hidden="true">PDF</span>
+                <span class="library-file-icon" aria-hidden="true" data-icon="file"></span>
                 <span class="library-file-copy"><strong>Vander. Fisiología humana: los mecanismos de la función corporal, 16.ª edición</strong><small>Documento PDF</small></span>
-                <span class="library-file-arrow" aria-hidden="true">⌄</span>
+                <span class="library-file-arrow" aria-hidden="true" data-icon="down"></span>
               </summary>
               <div class="library-file-details">
                 <div class="library-file-description">
@@ -218,21 +206,16 @@
                   </ul>
                 </div>
                 <div class="library-file-actions">
-                  <button class="library-view-button" type="button" aria-haspopup="dialog" data-preview-url="https://drive.google.com/file/d/1ASvJq8hr62n_618YqgqgCJiLJFjBsWsJ/preview" disabled>Ver documento <span aria-hidden="true">↗</span></button>
-                  <a
-                    class="library-download-button"
-                    href="https://drive.google.com/uc?export=download&amp;id=1ASvJq8hr62n_618YqgqgCJiLJFjBsWsJ"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >Descargar PDF <span aria-hidden="true">↓</span></a>
+                  <button class="library-view-button" type="button" aria-haspopup="dialog" data-preview-url="https://drive.google.com/file/d/1ASvJq8hr62n_618YqgqgCJiLJFjBsWsJ/preview">Ver documento <span aria-hidden="true" data-icon="external"></span></button>
+                  <a class="library-download-button icon-label-control" href="https://drive.google.com/uc?export=download&amp;id=1ASvJq8hr62n_618YqgqgCJiLJFjBsWsJ" target="_blank" rel="noopener noreferrer"><span data-icon="download" aria-hidden="true"></span> Descargar PDF</a>
                 </div>
               </div>
             </details>
             <details class="library-file">
               <summary>
-                <span class="library-file-icon" aria-hidden="true">PDF</span>
+                <span class="library-file-icon" aria-hidden="true" data-icon="file"></span>
                 <span class="library-file-copy"><strong>Silverthorn. Fisiología humana, 8.ª edición</strong><small>Documento PDF</small></span>
-                <span class="library-file-arrow" aria-hidden="true">⌄</span>
+                <span class="library-file-arrow" aria-hidden="true" data-icon="down"></span>
               </summary>
               <div class="library-file-details">
                 <div class="library-file-description">
@@ -248,62 +231,161 @@
                   </ul>
                 </div>
                 <div class="library-file-actions">
-                  <button class="library-view-button" type="button" aria-haspopup="dialog" data-preview-url="https://drive.google.com/file/d/1g4F-_Fqx3wG98oQGqQwyDmLHPUeP2By6/preview">Ver documento <span aria-hidden="true">↗</span></button>
-                  <a
-                    class="library-download-button"
-                    href="https://drive.google.com/uc?export=download&amp;id=1g4F-_Fqx3wG98oQGqQwyDmLHPUeP2By6"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >Descargar PDF <span aria-hidden="true">↓</span></a>
+                  <button class="library-view-button" type="button" aria-haspopup="dialog" data-preview-url="https://drive.google.com/file/d/1g4F-_Fqx3wG98oQGqQwyDmLHPUeP2By6/preview">Ver documento <span aria-hidden="true" data-icon="external"></span></button>
+                  <a class="library-download-button icon-label-control" href="https://drive.google.com/uc?export=download&amp;id=1g4F-_Fqx3wG98oQGqQwyDmLHPUeP2By6" target="_blank" rel="noopener noreferrer"><span data-icon="download" aria-hidden="true"></span> Descargar PDF</a>
                 </div>
               </div>
             </details>
           </div>
+          </section>
+          <section id="library-diagrams" class="library-module-panel" role="tabpanel" aria-labelledby="library-tab-diagrams" hidden>
+            <h2 class="library-section-title">Ilustraciones y diagramas</h2>
+            <p class="library-section-copy">Esquemas del Atlas para conectar la anatomía, el filtrado y el recorrido de la glucosa.</p>
+            <div id="library-diagram-list" class="library-diagram-list"></div>
+          </section>
+          <section id="library-videos" class="library-module-panel" role="tabpanel" aria-labelledby="library-tab-videos" hidden>
+            <div class="library-video-heading"><div><h2 class="library-section-title">Clases de fisiología</h2><p class="library-section-copy">Dr. Eduardo Paiva · Canal Medizi. Selecciona un tema y sigue las clases en orden.</p></div><a href="https://www.youtube.com/@doctor.paiva." target="_blank" rel="noopener noreferrer" class="library-source-link icon-label-control"><span data-icon="external" aria-hidden="true"></span> Ir al canal</a></div>
+            <div class="library-video-filters"><label>Tema<select id="library-video-topic"></select></label><label>Buscar clase<input type="search" id="library-video-search" placeholder="Filtración, glucosa, membrana…"></label></div>
+            <p id="library-video-count" class="library-section-copy" aria-live="polite"></p>
+            <div id="library-video-list" class="library-video-list"></div>
+            <p id="library-video-empty" class="library-empty" hidden>No hay clases con ese texto. Prueba otro término.</p>
+          </section>
         </div>
       </section>
 
-      <dialog class="library-pdf-dialog" id="library-pdf-dialog" aria-labelledby="library-pdf-title">
-        <div class="library-pdf-header">
-          <h2 id="library-pdf-title"></h2>
-          <button class="library-pdf-close" id="library-pdf-close" type="button" aria-label="Cerrar visor PDF">×</button>
+      <dialog id="library-reader" class="library-reader" aria-labelledby="library-reader-title">
+        <header class="library-reader-header"><div><p id="library-reader-kind" class="home-eyebrow"></p><h2 id="library-reader-title"></h2></div><div class="library-reader-actions"><button id="library-reader-annotate" type="button" aria-pressed="false" class="icon-label-control"><span data-icon="pencil" aria-hidden="true"></span> Anotar</button><a id="library-reader-download" target="_blank" rel="noopener noreferrer" class="icon-label-control"><span data-icon="download" aria-hidden="true"></span> Descargar PDF</a><a id="library-reader-source" target="_blank" rel="noopener noreferrer" class="icon-label-control"><span data-icon="external" aria-hidden="true"></span> Abrir original</a><button id="library-reader-close" type="button" aria-label="Cerrar visor" class="icon-label-control"><span data-icon="close" aria-hidden="true"></span></button></div></header>
+        <div class="library-reader-meta"><p id="library-reader-hint"></p><label id="library-page-label">Página de tus anotaciones <input type="number" id="library-note-page" min="1" max="10000" value="1" aria-label="Número de página para guardar tus anotaciones"></label><span id="library-video-time" hidden></span></div>
+        <div id="library-pdf-controls" class="library-pdf-controls" aria-label="Controles del PDF" hidden>
+          <button data-pdf-prev type="button" aria-label="Página anterior" class="icon-label-control"><span data-icon="left" aria-hidden="true"></span> Anterior</button>
+          <span id="library-pdf-pages" aria-live="polite">Cargando páginas…</span>
+          <button data-pdf-next type="button" aria-label="Página siguiente" class="icon-label-control"><span data-icon="right" aria-hidden="true"></span> Siguiente</button>
+          <span class="library-pdf-controls-divider" aria-hidden="true"></span>
+          <button data-pdf-fit="page" class="active" aria-pressed="true" type="button">Página completa</button>
+          <button data-pdf-fit="width" aria-pressed="false" type="button">Ajustar al ancho</button>
+          <button data-pdf-zoom="out" type="button" aria-label="Alejar PDF" class="icon-label-control"><span data-icon="minus" aria-hidden="true"></span></button>
+          <output id="library-pdf-zoom" aria-label="Zoom del PDF"></output>
+          <button data-pdf-zoom="in" type="button" aria-label="Acercar PDF" class="icon-label-control"><span data-icon="plus" aria-hidden="true"></span></button>
         </div>
-        <iframe id="library-pdf-frame" title="Visor de documento PDF"></iframe>
+        <div id="library-ink-toolbar" class="library-ink-toolbar" hidden>
+          <span class="drawing-status">Modo anotación</span><label>Color<input type="color" data-ink-color value="#8c2626"></label><label>Grosor<input type="range" data-ink-width min="2" max="18" value="5"><output>5 px</output></label><button data-ink-eraser type="button" aria-pressed="false" class="icon-label-control"><span data-icon="eraser" aria-hidden="true"></span> Borrador</button><button data-ink-undo type="button" class="icon-label-control"><span data-icon="undo" aria-hidden="true"></span> Deshacer</button><button data-ink-clear type="button" class="icon-label-control"><span data-icon="trash" aria-hidden="true"></span> Limpiar</button><button id="library-ink-done" type="button" class="icon-label-control"><span data-icon="check" aria-hidden="true"></span> Terminar anotación</button>
+        </div>
+        <div id="library-reader-status" role="status" aria-live="polite"></div>
+        <div class="library-reader-body"><div id="library-reader-stage" class="library-reader-stage"><div id="library-reader-media"></div><canvas id="library-reader-ink" aria-label="Dibuja tus anotaciones sobre el recurso" hidden></canvas></div><aside id="library-video-notes" class="library-video-notes" hidden><h3>Mis anotaciones</h3><p>Selecciona un momento para volver a tus trazos.</p><div id="library-video-note-list"></div></aside></div>
       </dialog>
 
       <aside class="toolbar-left">
         <button class="tool-btn active" id="btn-select">
-          <span class="icon">↖</span><span class="label">Seleccionar</span>
+          <span class="icon" data-icon="select" aria-hidden="true"></span><span class="label">Seleccionar</span>
         </button>
         <button class="tool-btn" id="btn-isolate">
-          <span class="icon">⬡</span><span class="label">Aislar</span>
+          <span class="icon" data-icon="isolate" aria-hidden="true"></span><span class="label">Aislar</span>
         </button>
         <button class="tool-btn" id="btn-highlight">
-          <span class="icon">✂</span><span class="label">Activar / desactivar corte</span>
+          <span class="icon" data-icon="cut" aria-hidden="true"></span><span class="label">Activar / desactivar corte</span>
         </button>
         <button class="tool-btn" id="btn-hide">
-          <span class="icon">👁</span><span class="label">Mostrar / ocultar</span>
-        </button>
-        <button class="tool-btn" id="btn-xray">
-          <span class="icon">🧊</span><span class="label">Rayos X</span>
+          <span class="icon" data-icon="eye" aria-hidden="true"></span><span class="label">Mostrar / ocultar</span>
         </button>
 
         <!-- Nueva herramienta de anotaciones -->
         <div class="toolbar-divider"></div>
         <button class="tool-btn" id="btn-draw" aria-pressed="false">
-          <span class="icon">✏️</span><span class="label">Anotar</span>
+          <span class="icon" data-icon="pencil" aria-hidden="true"></span><span class="label">Anotar</span>
         </button>
       </aside>
 
-      <div class="canvas-container">
-        <canvas id="webgl-canvas"></canvas>
-        <button id="anatomy-model-switch" class="anatomy-model-switch" type="button" aria-label="Abrir glomérulo" disabled>
-          <span class="model-switch-eyebrow">Explorar otro modelo</span>
-          <canvas id="alternate-model-canvas" aria-hidden="true"></canvas>
-          <span id="alternate-model-name">Cargando glomérulo…</span>
-          <span class="model-switch-action">Seleccionar ↗</span>
-        </button>
-        <div id="anatomy-loading" class="canvas-loading" role="status" hidden>Cargando glomérulo…</div>
+      <aside id="glucose-controls-panel" class="glucose-controls-panel" aria-labelledby="glucose-controls-title" hidden>
+        <header class="glucose-controls-header"><span>VIAJE DE LA GLUCOSA</span><h2 id="glucose-controls-title">Simulación</h2></header>
+            <section class="simulation-controls" aria-label="Control de simulación">
+              <span class="simulation-eyebrow">Estado</span>
+              <div id="kidney-mode-controls">
+                <h3 id="kidney-flow-title">Normal</h3>
+                <p id="kidney-flow-description">La glucosa pasa a las nefronas. La salida de orina no contiene partículas naranjas.</p>
+                <div class="mode-buttons kidney-mode-buttons" role="group" aria-label="Estado del recorrido renal">
+                  <button type="button" data-kidney-mode="normal" aria-pressed="true" disabled>Normal</button>
+                  <button type="button" data-kidney-mode="glucosuria" aria-pressed="false" disabled>Glucosuria</button>
+                </div>
+              </div>
+              <div id="nephron-mode-controls" hidden>
+              <h3 id="flow-title">Filtración baja</h3>
+              <p id="flow-description">Pocas partículas · velocidad lenta</p>
+              <div class="mode-buttons" role="group" aria-label="Estado de filtración">
+                <button type="button" data-mode="low" aria-pressed="true">Bajo</button>
+                <button type="button" data-mode="normal" aria-pressed="false">Normal</button>
+                <button type="button" data-mode="glucosuria" aria-pressed="false">Glucosuria</button>
+              </div>
 
+              </div>
+              <div class="simulation-actions">
+                <button type="button" id="pause" class="icon-label-control"><span data-icon="pause" aria-hidden="true"></span> Pausar</button>
+                <button type="button" id="restart" class="icon-label-control"><span data-icon="restart" aria-hidden="true"></span> Reiniciar</button>
+              </div>
+              <div class="section-divider"></div>
+              <h3 class="glucose-visual-heading">Visualización</h3>
+              <label class="range-label" for="opacity">Opacidad de las paredes <output id="opacity-value">20%</output></label>
+              <input id="opacity" type="range" min="0.04" max="0.8" step="0.01" value="0.2">
+              <label class="vessels-check"><input id="vessels" type="checkbox" checked> Mostrar vasos sanguíneos</label>
+
+
+            </section>
+      </aside>
+
+      <aside id="filtration-controls-panel" class="glucose-controls-panel filtration-controls-panel" aria-labelledby="filtration-controls-title" hidden><header class="glucose-controls-header"><span>FILTRACIÓN</span><h2 id="filtration-controls-title">Simulación</h2></header><section class="glomerulus-controls" aria-label="Simulación del glomérulo">
+                <div class="glomerulus-heading"><h3>Glomérulo · simulación</h3><span id="filtration-source">TFG de Starling</span></div>
+                <p id="filtration-flow-state">Filtración normal</p>
+                <p id="filtration-glucose-state">Reabsorción completa</p>
+                <div class="glomerulus-summary"><span>TFG activa</span><strong id="filtration-active-tfg">125.0 mL/min</strong></div>
+                <p id="filtration-fraction">100% reabsorbida · 0% continúa</p>
+                <div class="glomerulus-events">
+                  <div><span>Filtradas</span><strong id="glomerulus-filtered">0</strong></div>
+                  <div><span>Reabsorbidas</span><strong id="glomerulus-absorbed">0</strong></div>
+                  <div><span>Continúan</span><strong id="glomerulus-continued">0</strong></div>
+                </div>
+                <label class="range-label" for="glomerulus-opacity">Opacidad del modelo <output id="glomerulus-opacity-value">20%</output></label>
+                <input id="glomerulus-opacity" type="range" min="0.04" max="0.65" step="0.01" value="0.2">
+                <div class="simulation-actions"><button id="filtration-pause" type="button" class="icon-label-control"><span data-icon="pause" aria-hidden="true"></span> Pausar</button><button id="filtration-restart" type="button" class="icon-label-control"><span data-icon="restart" aria-hidden="true"></span> Reiniciar</button></div>
+                <p class="glomerulus-hint">La glucosa reabsorbida vuelve a la sangre por las ramificaciones de salida. La conexión desde el proximal es esquemática; el resto continúa por la nefrona. Los contadores representan partículas.</p>
+              </section>
+              </aside><div class="canvas-container">
+        <div id="model-stage" class="model-stage"><canvas id="webgl-canvas"></canvas>
+        <div id="glucose-note-tool" class="viewer-note-tool" hidden>
+          <button id="btn-glucose-draw" type="button" aria-pressed="false" aria-expanded="false" aria-controls="drawing-controls" class="icon-label-control"><span data-icon="pencil" aria-hidden="true"></span> Anotar</button>
+        </div>
+        <nav id="anatomy-model-picker" class="anatomy-model-picker" aria-label="Modelos de anatomía">
+          <span class="model-switch-eyebrow">Explorar otro modelo</span>
+          <div class="anatomy-model-options">
+            <button class="anatomy-model-switch" data-anatomy-model="kidney" type="button" aria-label="Abrir riñón" disabled hidden>
+              <canvas aria-hidden="true"></canvas><span class="model-switch-name">Cargando riñón…</span><span class="model-switch-action icon-label-control"><span data-icon="external" aria-hidden="true"></span> Seleccionar</span>
+            </button>
+            <button class="anatomy-model-switch" data-anatomy-model="glomerulus" type="button" aria-label="Abrir glomérulo" disabled>
+              <canvas aria-hidden="true"></canvas><span class="model-switch-name">Cargando glomérulo…</span><span class="model-switch-action icon-label-control"><span data-icon="external" aria-hidden="true"></span> Seleccionar</span>
+            </button>
+            <button class="anatomy-model-switch" data-anatomy-model="nephron" type="button" aria-label="Abrir nefrona" disabled>
+              <canvas aria-hidden="true"></canvas><span class="model-switch-name">Cargando nefrona…</span><span class="model-switch-action icon-label-control"><span data-icon="external" aria-hidden="true"></span> Seleccionar</span>
+            </button>
+            <button class="anatomy-model-switch" data-anatomy-model="nephron85" type="button" aria-label="Abrir Nefrona 85%" disabled>
+              <canvas aria-hidden="true"></canvas><span class="model-switch-name">Cargando Nefrona 85%…</span><span class="model-switch-action icon-label-control"><span data-icon="external" aria-hidden="true"></span> Seleccionar</span>
+            </button>
+          </div>
+        </nav>
+
+        <nav id="glucose-model-picker" class="anatomy-model-picker glucose-model-picker" aria-label="Cambiar escala del recorrido" hidden>
+          <span class="model-switch-eyebrow">Explorar el recorrido</span>
+          <div class="anatomy-model-options">
+            <button type="button" class="anatomy-model-switch" data-glucose-model="kidney" aria-label="Volver al recorrido del riñón" disabled hidden>
+              <canvas aria-hidden="true"></canvas><span class="model-switch-name">Riñón en corte</span><span class="model-switch-action icon-label-control"><span data-icon="external" aria-hidden="true"></span> Ver recorrido</span>
+            </button>
+            <button type="button" class="anatomy-model-switch" data-glucose-model="nephron" aria-label="Explorar el recorrido en la nefrona" disabled>
+              <canvas aria-hidden="true"></canvas><span class="model-switch-name">Nefrona 85%</span><span class="model-switch-action icon-label-control"><span data-icon="external" aria-hidden="true"></span> Explorar los tres estados</span>
+            </button>
+          </div>
+          <div id="nephron-handoff-notice" class="nephron-handoff-notice" role="status" hidden>
+            <span>Enlace didáctico completado</span>
+            <strong>Ahora ve a la nefrona</strong>
+            <p>Selecciona la miniatura para continuar el recorrido a otra escala.</p>
+          </div>
+        </nav>
         <div id="glucose-loading" class="canvas-loading" role="status" hidden>Cargando recorrido de la glucosa…</div>
         <div id="filtration-loading" class="canvas-loading" role="status" hidden>Cargando glomérulo…</div>
         <div id="filtration-pause-notice" class="simulation-pause-notice" role="status" hidden>Simulación en pausa</div>
@@ -324,102 +406,176 @@
             <input type="range" id="draw-width" min="2" max="18" value="5">
             <output id="draw-width-value">5 px</output>
           </label>
-          <button class="draw-control-btn" id="btn-eraser" title="Activar borrador">Borrador</button>
-          <button class="draw-control-btn" id="btn-undo" title="Deshacer último trazo">↶ Deshacer</button>
-          <button class="draw-control-btn danger" id="btn-clear" title="Borrar todas las anotaciones">Limpiar</button>
-          <button class="draw-control-btn close-draw" id="btn-close-draw" title="Cerrar modo anotación">×</button>
+          <button class="draw-control-btn icon-label-control" id="btn-eraser" title="Activar borrador"><span data-icon="eraser" aria-hidden="true"></span> Borrador</button>
+          <button class="draw-control-btn icon-label-control" id="btn-undo" title="Deshacer último trazo"><span data-icon="undo" aria-hidden="true"></span> Deshacer</button>
+          <button class="draw-control-btn danger icon-label-control" id="btn-clear" title="Borrar todas las anotaciones"><span data-icon="trash" aria-hidden="true"></span> Limpiar</button>
+          <button class="draw-control-btn close-draw icon-label-control" id="btn-close-draw" title="Cerrar modo anotación" aria-label="Cerrar modo anotación"><span data-icon="close" aria-hidden="true"></span></button>
         </div>
-      </div>
+      </div><section id="formula-deck" class="formula-deck" aria-labelledby="formula-deck-title" hidden>
+<header class="formula-deck-header"><div><span class="simulation-eyebrow">RESULTADOS EN VIVO</span><h2 id="formula-deck-title">Fórmulas y resultados</h2></div><nav class="formula-carousel-nav" aria-label="Cambiar fórmula"><span id="formula-position" aria-live="polite">1 / 4</span><button id="formula-previous" type="button" aria-label="Fórmula anterior"><span data-icon="up"></span></button><button id="formula-next" type="button" aria-label="Fórmula siguiente"><span data-icon="down"></span></button></nav></header>
+<div id="formula-cards-glucose" class="formula-carousel-group" data-formula-group="glucose" tabindex="0" role="region" aria-label="Fórmulas de glucosa: desliza hacia abajo"><div class="formula-card" role="group" title="Cantidad total de glucosa que atraviesa la barrera de filtración glomerular por minuto." aria-description="Cantidad total de glucosa que atraviesa la barrera de filtración glomerular por minuto.">
+                  <div class="formula-card-header">
+                    <span class="formula-title">1. Carga Filtrada (FL<sub>Glu</sub>)</span>
+                    <span class="formula-badge">Glomérulo</span>
+                  </div>
+                  <div class="formula-equation">
+                    FL<sub>Glu</sub> = (TFG × P<sub>Glu</sub>) / 100
+                  </div>
+                  <p class="formula-desc">Cantidad total de glucosa que atraviesa la barrera de filtración glomerular por minuto.</p>
+                  <div class="formula-result">
+                    <span>Carga calculada:</span>
+                    <span class="formula-result-value" id="res-fglu">125.0 mg/min</span>
+                  </div>
+                </div>
+
+                <div class="formula-card" role="group" title="90% reabsorbido por SGLT2 (S1/S2) y 10% por SGLT1 (S3). El modelo usa R = min(carga filtrada, TmG). El umbral de saturación depende de TmG y TFG." aria-description="90% reabsorbido por SGLT2 (S1/S2) y 10% por SGLT1 (S3). El modelo usa R = min(carga filtrada, TmG). El umbral de saturación depende de TmG y TFG.">
+                  <div class="formula-card-header">
+                    <span class="formula-title">2. Reabsorción Tubular (R<sub>Glu</sub>)</span>
+                    <span class="formula-badge amber">Túbulo Proximal</span>
+                  </div>
+                  <div class="formula-equation">
+                    R<sub>Glu</sub> = min(FL<sub>Glu</sub>, TmG)
+                  </div>
+                  <p class="formula-desc">90% reabsorbido por <strong>SGLT2</strong> (S1/S2) y 10% por <strong>SGLT1</strong> (S3). El modelo usa R = min(carga filtrada, TmG). El umbral de saturación depende de TmG y TFG.</p>
+                  <div class="saturation-bar-container">
+                    <div class="saturation-bar" id="sglt2-bar" style="width: 33.3%;"></div>
+                  </div>
+                  <div class="formula-result">
+                    <span>Reabsorción:</span>
+                    <span class="formula-result-value" id="res-rglu">125.0 mg/min</span>
+                  </div>
+                </div>
+
+                <div class="formula-card" role="group" title="Glucosa no reabsorbida que pasa a la orina hacia la pelvis renal y el uréter." aria-description="Glucosa no reabsorbida que pasa a la orina hacia la pelvis renal y el uréter.">
+                  <div class="formula-card-header">
+                    <span class="formula-title">3. Excreción Urinaria (E<sub>Glu</sub>)</span>
+                    <span class="formula-badge" id="badge-excretion">Vía Urinaria</span>
+                  </div>
+                  <div class="formula-equation">
+                    E<sub>Glu</sub> = max(0, FL<sub>Glu</sub> - R<sub>Glu</sub>)
+                  </div>
+                  <p class="formula-desc">Glucosa no reabsorbida que pasa a la orina hacia la pelvis renal y el uréter.</p>
+                  <div class="formula-result">
+                    <span>Excreción en orina:</span>
+                    <span class="formula-result-value" id="res-eglu">0.0 mg/min</span>
+                  </div>
+                </div>
+
+                <div class="formula-card" role="group">
+                  <div class="formula-card-header">
+                    <span class="formula-title">4. Fracción Excretada (FE<sub>Glu</sub>)</span>
+                    <span class="formula-badge teal">Eficiencia</span>
+                  </div>
+                  <div class="formula-equation">
+                    FE<sub>Glu</sub> = (E<sub>Glu</sub> / FL<sub>Glu</sub>) × 100%
+                  </div>
+                  <div class="formula-result">
+                    <span>Fracción excretada:</span>
+                    <span class="formula-result-value" id="res-feglu">0.0%</span>
+                  </div>
+                </div>
+              </div>
+<div id="formula-cards-filtration" class="formula-carousel-group" data-formula-group="filtration" tabindex="0" role="region" aria-label="Fórmulas de Starling: desliza hacia abajo" hidden><div class="formula-card" role="group" title="Balance neto entre las presiones hidrostáticas y oncóticas transcapilares." aria-description="Balance neto entre las presiones hidrostáticas y oncóticas transcapilares.">
+                  <div class="formula-card-header">
+                    <span class="formula-title">1. Presión Neta (PFN / NFP)</span>
+                    <span class="formula-badge">Glomérulo</span>
+                  </div>
+                  <div class="formula-equation">
+                    PFN = (P<sub>GC</sub> - P<sub>BS</sub>) - (π<sub>GC</sub> - π<sub>BS</sub>)
+                  </div>
+                  <p class="formula-desc">Balance neto entre las presiones hidrostáticas y oncóticas transcapilares.</p>
+                  <div class="formula-result">
+                    <span>PFN resultante:</span>
+                    <span class="formula-result-value" id="res-pfn">+10.0 mmHg</span>
+                  </div>
+                </div>
+
+                <div class="formula-card" role="group" title="Kf representa el coeficiente de conductividad hidráulica y área de superficie de filtración." aria-description="Kf representa el coeficiente de conductividad hidráulica y área de superficie de filtración.">
+                  <div class="formula-card-header">
+                    <span class="formula-title">2. TFG = K<sub>f</sub> × PFN</span>
+                    <span class="formula-badge teal">K<sub>f</sub> = 12.5</span>
+                  </div>
+                  <div class="formula-equation">
+                    TFG = 12.5 mL/min/mmHg × PFN
+                  </div>
+                  <p class="formula-desc">K<sub>f</sub> representa el coeficiente de conductividad hidráulica y área de superficie de filtración.</p>
+                  <div class="formula-result">
+                    <span>TFG estimada:</span>
+                    <span class="formula-result-value" id="res-starling-tfg">125.0 mL/min</span>
+                  </div>
+                </div>
+              </div>
+</section></div>
 
       <aside class="info-panel-right" id="info-panel">
         <div class="panel-header">
           <h2 id="structure-title">Corteza renal</h2>
-          <button class="close-btn" id="close-panel">×</button>
+          <button class="close-btn icon-label-control" id="close-panel" aria-label="close"><span data-icon="close" aria-hidden="true"></span></button>
         </div>
         <div class="panel-body">
           <!-- VISTA 1: ANATOMÍA (Contenido anatómico original) -->
           <div id="anatomy-view" class="panel-view">
-            <div class="thumb-preview anatomy-part-preview">
-              <canvas id="structure-preview-canvas" aria-label="Vista aislada de la estructura seleccionada"></canvas>
-              <span id="structure-preview-empty" hidden>Selecciona una estructura</span>
+            <div id="anatomy-details">
+              <div class="thumb-preview anatomy-part-preview">
+                <canvas id="structure-preview-canvas" aria-label="Vista aislada de la estructura seleccionada"></canvas>
+                <span id="structure-preview-empty" hidden>Selecciona una estructura</span>
+              </div>
+              <p class="preview-caption">Vista aislada · arrastra para girar</p>
+              <p id="structure-desc"></p>
+              <div class="section-divider"></div>
+              <h3>Función</h3>
+              <p id="structure-function"></p>
             </div>
-            <p class="preview-caption">Vista aislada · arrastra para girar</p>
-            <p id="structure-desc">Capa externa del riñón donde se localizan los glomérulos.</p>
-            <div class="section-divider"></div>
-            <h3>Función</h3>
-            <p id="structure-function">Filtra la sangre y da inicio a la formación de la orina.</p>
-            <div class="section-divider"></div>
-            <h3>Estructuras</h3>
-            <ul class="structure-list" id="structure-list">
-              <li><span class="dot red"></span> Corteza renal</li>
-              <li><span class="dot dark-red"></span> Médula renal</li>
-              <li><span class="dot orange"></span> Pirámides renales</li>
-              <li><span class="dot light-orange"></span> Cálices menores</li>
-              <li><span class="dot yellow"></span> Cálices mayores</li>
-              <li><span class="dot beige"></span> Pelvis renal</li>
-              <li><span class="dot red-bright"></span> Arteria renal</li>
-              <li><span class="dot blue"></span> Vena renal</li>
-              <li><span class="dot yellow-bright"></span> Uréter</li>
-            </ul>
+            <div id="anatomy-list-section">
+              <div class="section-divider"></div>
+              <h3>Estructuras</h3>
+              <ul class="structure-list" id="structure-list"></ul>
+            </div>
           </div>
 
           <div id="glucose-view" class="panel-view" style="display: none;">
+            <section id="kidney-journey-info" class="kidney-journey-info" aria-label="Recorrido renal">
+              <h3>Recorrido</h3>
+              <p>La sangre con glucosa entra por la arteria renal, recorre la red vascular del riñón y regresa por la vena renal.</p>
+              <p>La orina sigue otra vía: cálices → pelvis renal → uréter.</p>
+
+            </section>
+            <div id="nephron-journey-info" hidden>
             <ol class="glucose-steps" aria-label="Pasos del recorrido de la glucosa">
               <li class="glucose-step active" aria-current="step">
-                <b>01</b><div><h3>Filtración</h3><p>La sangre entra por el vaso central. La glucosa pasa al filtrado y la sangre sale por la otra arteriola.</p></div>
+                <b>01</b><div><h3>Filtración</h3><p>La sangre y la glucosa entran juntas. Parte de la glucosa pasa al filtrado; el resto continúa por la sangre y sale por el vaso ramificado.</p></div>
               </li>
               <li class="glucose-step">
-                <b>02</b><div><h3>Reabsorción</h3><p>Las partículas reabsorbidas desaparecen en el primer tramo del tubo amarillo.</p></div>
+                <b>02</b><div><h3>Reabsorción</h3><p>La glucosa reabsorbida vuelve a la sangre y sale por el vaso ramificado.</p></div>
               </li>
               <li class="glucose-step">
                 <b>03</b><div><h3>Recorrido completo</h3><p id="step3-description">El filtrado continúa; en este estado, toda la glucosa se reabsorbe antes del colector.</p></div>
               </li>
             </ol>
-            <div class="section-divider"></div>
-            <section class="simulation-controls" aria-label="Control de simulación">
-              <span class="simulation-eyebrow">Control de simulación</span>
-              <h3 id="flow-title">Filtración baja</h3>
-              <p id="flow-description">Pocas partículas · velocidad lenta</p>
-              <div class="mode-buttons" role="group" aria-label="Estado de filtración">
-                <button type="button" data-mode="low" aria-pressed="true">Bajo</button>
-                <button type="button" data-mode="normal" aria-pressed="false">Normal</button>
-                <button type="button" data-mode="glucosuria" aria-pressed="false">Glucosuria</button>
-              </div>
+            <h3 class="glucose-metrics-heading">Partículas</h3>
               <dl class="simulation-metrics">
                 <div><dt>Glucosa filtrada</dt><dd id="filtered">0</dd></div>
                 <div><dt>Glucosa reabsorbida</dt><dd id="absorbed">0</dd></div>
+                <div><dt>Glucosa que siguió en la sangre</dt><dd id="nephron-unfiltered">0</dd></div>
                 <div><dt>Glucosa que llegó al colector</dt><dd id="collector">0</dd></div>
               </dl>
-              <label class="range-label" for="opacity">Opacidad de las paredes <output id="opacity-value">20%</output></label>
-              <input id="opacity" type="range" min="0.04" max="0.8" step="0.01" value="0.2">
-              <label class="vessels-check"><input id="vessels" type="checkbox" checked> Mostrar vasos sanguíneos</label>
-              <div class="simulation-actions">
-                <button type="button" id="pause">Pausar</button>
-                <button type="button" id="restart">Reiniciar</button>
-              </div>
-              <p class="simulation-note">Los contadores indican partículas de la simulación. La desaparición representa la reabsorción de forma esquemática.</p>
+            </div>
+
+            <section class="glucose-legend-section" aria-label="Colores de las partículas">
+              <h3>En el visor</h3>
+              <ul class="glucose-particle-legend">
+                <li><i class="journey-blood"></i>Sangre</li>
+                <li><i class="journey-glucose"></i>Glucosa</li>
+                <li id="glucose-return-legend" hidden><i class="journey-return"></i>Glucosa de retorno</li>
+                <li><i class="journey-urine"></i>Filtrado / orina</li>
+              </ul>
             </section>
+              <p id="glucose-simulation-note" class="simulation-note"></p>
           </div>
           <div id="formulas-view" class="panel-view" style="display: none;">
-            <div class="formulas-section">
-              <section class="glomerulus-controls" aria-label="Simulación del glomérulo">
-                <div class="glomerulus-heading"><h3>Glomérulo · simulación</h3><span id="filtration-source">TFG de Starling</span></div>
-                <p id="filtration-flow-state">Filtración normal</p>
-                <p id="filtration-glucose-state">Reabsorción completa</p>
-                <div class="glomerulus-summary"><span>TFG activa</span><strong id="filtration-active-tfg">125.0 mL/min</strong></div>
-                <p id="filtration-fraction">100% reabsorbida · 0% continúa</p>
-                <label class="link-starling"><input id="link-starling" type="checkbox" checked> Vincular TFG a Starling</label>
+            <label class="link-starling"><input id="link-starling" type="checkbox" checked> Vincular TFG a Starling</label>
                 <p class="glomerulus-hint">Las presiones controlan la TFG. Mueve el slider TFG para usar un valor manual.</p>
-                <div class="glomerulus-events">
-                  <div><span>Filtradas</span><strong id="glomerulus-filtered">0</strong></div>
-                  <div><span>Reabsorbidas</span><strong id="glomerulus-absorbed">0</strong></div>
-                  <div><span>Continúan</span><strong id="glomerulus-continued">0</strong></div>
-                </div>
-                <label class="range-label" for="glomerulus-opacity">Opacidad del modelo <output id="glomerulus-opacity-value">20%</output></label>
-                <input id="glomerulus-opacity" type="range" min="0.04" max="0.65" step="0.01" value="0.2">
-                <div class="simulation-actions"><button id="filtration-pause" type="button">Pausar</button><button id="filtration-restart" type="button">Reiniciar</button></div>
-                <p class="glomerulus-hint">Modelo parcial: la glucosa que sale del proximal continúa hacia el resto de la nefrona. Los contadores representan partículas.</p>
-              </section>
+                <div class="formulas-section">
               <!-- Sub-pestañas de fórmulas -->
               <div class="formula-subnav">
                 <button class="formula-subtab active" id="btn-subtab-glucose">Glucosa (SGLT2/TmG)</button>
@@ -468,76 +624,15 @@
                   </div>
 
                   <div class="clinical-status-tag normal" id="glucose-status-tag">
-                    <span>✓</span> <span id="glucose-status-text">Glucemia fisiológica normal. Sin pérdida de glucosa.</span>
+                    <span data-icon="check" aria-hidden="true"></span> <span id="glucose-status-text">Glucemia fisiológica normal. Sin pérdida de glucosa.</span>
                   </div>
                 </div>
 
                 <!-- Tarjeta 1: Carga Filtrada (FGlu) -->
-                <div class="formula-card">
-                  <div class="formula-card-header">
-                    <span class="formula-title">1. Carga Filtrada (FL<sub>Glu</sub>)</span>
-                    <span class="formula-badge">Glomérulo</span>
-                  </div>
-                  <div class="formula-equation">
-                    FL<sub>Glu</sub> = (TFG × P<sub>Glu</sub>) / 100
-                  </div>
-                  <p class="formula-desc">Cantidad total de glucosa que atraviesa la barrera de filtración glomerular por minuto.</p>
-                  <div class="formula-result">
-                    <span>Carga calculada:</span>
-                    <span class="formula-result-value" id="res-fglu">125.0 mg/min</span>
-                  </div>
-                </div>
-
                 <!-- Tarjeta 2: Reabsorción Tubular (RGlu) -->
-                <div class="formula-card">
-                  <div class="formula-card-header">
-                    <span class="formula-title">2. Reabsorción Tubular (R<sub>Glu</sub>)</span>
-                    <span class="formula-badge amber">Túbulo Proximal</span>
-                  </div>
-                  <div class="formula-equation">
-                    R<sub>Glu</sub> = min(FL<sub>Glu</sub>, TmG)
-                  </div>
-                  <p class="formula-desc">90% reabsorbido por <strong>SGLT2</strong> (S1/S2) y 10% por <strong>SGLT1</strong> (S3). El modelo usa R = min(carga filtrada, TmG). El umbral de saturación depende de TmG y TFG.</p>
-                  <div class="saturation-bar-container">
-                    <div class="saturation-bar" id="sglt2-bar" style="width: 33.3%;"></div>
-                  </div>
-                  <div class="formula-result">
-                    <span>Reabsorción:</span>
-                    <span class="formula-result-value" id="res-rglu">125.0 mg/min</span>
-                  </div>
-                </div>
-
                 <!-- Tarjeta 3: Excreción Urinaria (EGlu) -->
-                <div class="formula-card">
-                  <div class="formula-card-header">
-                    <span class="formula-title">3. Excreción Urinaria (E<sub>Glu</sub>)</span>
-                    <span class="formula-badge" id="badge-excretion">Vía Urinaria</span>
-                  </div>
-                  <div class="formula-equation">
-                    E<sub>Glu</sub> = max(0, FL<sub>Glu</sub> - R<sub>Glu</sub>)
-                  </div>
-                  <p class="formula-desc">Glucosa no reabsorbida que pasa a la orina hacia la pelvis renal y el uréter.</p>
-                  <div class="formula-result">
-                    <span>Excreción en orina:</span>
-                    <span class="formula-result-value" id="res-eglu">0.0 mg/min</span>
-                  </div>
-                </div>
-
                 <!-- Tarjeta 4: Fracción Excretada (FEGlu) -->
-                <div class="formula-card">
-                  <div class="formula-card-header">
-                    <span class="formula-title">4. Fracción Excretada (FE<sub>Glu</sub>)</span>
-                    <span class="formula-badge teal">Eficiencia</span>
-                  </div>
-                  <div class="formula-equation">
-                    FE<sub>Glu</sub> = (E<sub>Glu</sub> / FL<sub>Glu</sub>) × 100%
-                  </div>
-                  <div class="formula-result">
-                    <span>Fracción excretada:</span>
-                    <span class="formula-result-value" id="res-feglu">0.0%</span>
-                  </div>
                 </div>
-              </div>
 
               <!-- MÓDULO DE FILTRACIÓN GLOMERULAR / STARLING -->
               <div id="filtration-content" style="display: none;">
@@ -581,42 +676,13 @@
                   </div>
 
                   <div class="clinical-status-tag normal" id="starling-status-tag">
-                    <span>✓</span> <span id="starling-status-text">Ultrafiltración glomerular fisiológica activa.</span>
+                    <span data-icon="check" aria-hidden="true"></span> <span id="starling-status-text">Ultrafiltración glomerular fisiológica activa.</span>
                   </div>
                 </div>
 
                 <!-- Tarjeta 1: Presión de Filtración Neta (PFN) -->
-                <div class="formula-card">
-                  <div class="formula-card-header">
-                    <span class="formula-title">1. Presión Neta (PFN / NFP)</span>
-                    <span class="formula-badge">Glomérulo</span>
-                  </div>
-                  <div class="formula-equation">
-                    PFN = (P<sub>GC</sub> - P<sub>BS</sub>) - (π<sub>GC</sub> - π<sub>BS</sub>)
-                  </div>
-                  <p class="formula-desc">Balance neto entre las presiones hidrostáticas y oncóticas transcapilares.</p>
-                  <div class="formula-result">
-                    <span>PFN resultante:</span>
-                    <span class="formula-result-value" id="res-pfn">+10.0 mmHg</span>
-                  </div>
-                </div>
-
                 <!-- Tarjeta 2: TFG estimada por Starling -->
-                <div class="formula-card">
-                  <div class="formula-card-header">
-                    <span class="formula-title">2. TFG = K<sub>f</sub> × PFN</span>
-                    <span class="formula-badge teal">K<sub>f</sub> = 12.5</span>
-                  </div>
-                  <div class="formula-equation">
-                    TFG = 12.5 mL/min/mmHg × PFN
-                  </div>
-                  <p class="formula-desc">K<sub>f</sub> representa el coeficiente de conductividad hidráulica y área de superficie de filtración.</p>
-                  <div class="formula-result">
-                    <span>TFG estimada:</span>
-                    <span class="formula-result-value" id="res-starling-tfg">125.0 mL/min</span>
-                  </div>
                 </div>
-              </div>
             </div>
           </div>
           <!-- ============================================================= -->
@@ -626,6 +692,8 @@
       </aside>
     </main>
   </div>
+  <div id="capture-status" class="capture-status" role="status" aria-live="polite" data-html2canvas-ignore hidden></div>
+  <script type="module" src="library.js"></script>
   <script type="module" src="main.js"></script>
 </body>
 </html>

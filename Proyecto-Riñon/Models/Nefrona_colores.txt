@@ -1,0 +1,19 @@
+capsula de Bowman: #2B0096
+
+Ateriola_eferente: #967F07
+
+aferente: #94DFBA
+
+Glomerulo: #DF7F79
+
+Tubulo_proximal: #B6DF57
+
+Asa de Henle: #B697BD
+
+Conducto de Bellini: #3EBDBD
+
+Conducto colector cortical: #3EBDBD
+
+Tubulo contorneado distal: #9E6157
+
+Cpilares según ví: #4E5709

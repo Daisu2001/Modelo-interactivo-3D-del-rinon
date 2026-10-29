@@ -5,11 +5,17 @@ import { GlucoseModule } from './glucose.js';
 import { FiltrationModule } from './filtration.js';
 import { calculateRenalState } from './renal-physiology.js';
 import { AnatomyBrowser } from './anatomy-browser.js';
-import { prepareGlomerulusMesh } from './glomerulus-structures.js';
+import { prepareGlomerulusMesh, alignGlomerulusModel } from './glomerulus-structures.js';
+import { prepareNephronMesh } from './nephron-structures.js';
+import { prepareNephron85Mesh } from './nephron85-structures.js';
+import { FormulaCarousel } from './formula-carousel.js';
+import { hydrateIcons } from './icons.js';
+import { installScreenshotButton } from './screenshot.js';
+hydrateIcons();
 
 // --- ELEMENTOS HTML ---
 const canvas = document.querySelector('#webgl-canvas');
-const container = document.querySelector('.canvas-container');
+const container = document.querySelector('#model-stage');
 
 // --- ESCENA THREE.JS ---
 const scene = new THREE.Scene();
@@ -44,31 +50,45 @@ controls.dampingFactor = 0.05;
 // --- VARIABLES DE MODELOS ---
 let kidneyModel = null;
 let glomerulusAnatomy = null;
+let nephronAnatomy = null;
+let nephron85Anatomy = null;
 let anatomyKind = 'kidney';
 let anatomyBrowser = null;
 let currentActiveTab = '1';
 let isCutViewActive = false;
-let isXrayActive = false;
 
 const HIDDEN_OPACITY = 0.08;
 const loader = new GLTFLoader();
 const frameClock = new THREE.Clock();
 const glucoseModule = new GlucoseModule(scene);
 const filtrationModule = new FiltrationModule(scene);
+const formulaCarousel = new FormulaCarousel();
 
 // Completar o corregir este mapa cuando el artista entregue la equivalencia
 // semántica de los colores de segmentación. El RGB se obtiene del atributo
 // COLOR_0 del GLB y el valor se muestra directamente en el panel informativo.
 const structureNameByVertexColor = {
   '255,0,0': 'Corteza renal',
+  '80,27,17': 'Corteza renal', // Identificador del riñón texturizado.
+  '0,255,255': 'Corteza renal', // Superficie del riñón de corte.
+  '255,0,255': 'Corteza renal', // Borde de la misma pieza de corte.
   '25,255,118': 'Pirámides renales',
+  '0,80,47': 'Pirámides renales',
   '255,37,46': 'Arteria renal',
   '255,0,34': 'Arteria renal',
+  '121,16,42': 'Arteria renal',
   '36,51,255': 'Vena renal',
   '3,0,255': 'Vena renal',
+  '11,0,184': 'Vena renal',
+  '92,255,0': 'Vena renal',
   '0,68,255': 'Cálices menores',
+  '70,0,255': 'Cálices mayores',
   '255,175,0': 'Pelvis renal',
-  '255,109,16': 'Uréter'
+  '255,109,16': 'Uréter',
+  '255,72,0': 'Uréter',
+  '58,255,0': 'Uréter',
+  '80,0,0': 'Sistema colector',
+  '255,0,231': 'Sistema colector'
 };
 
 function setupModel(model) {
@@ -89,6 +109,8 @@ function setupModel(model) {
           : child.material.clone();
         splitVertexColorsIntoMaterialGroups(child);
         forEachMaterial(child, (material) => {
+          // COLOR_0 identifica regiones para seleccionar; la textura define su aspecto.
+          if (material.map) material.vertexColors = false;
           material.side = THREE.DoubleSide;
           material.transparent = false;
           material.opacity = 1.0;
@@ -118,7 +140,13 @@ function getVertexColorKey(colorAttribute, vertexIndex) {
   return `${red},${green},${blue}`;
 }
 
-function getStructureName(colorKey) {
+function getStructureName(colorKey, mesh) {
+  // En los archivos vasculares, los colores de los bordes de corte son tapas
+  // del mismo vaso. No identifican una vena o un uréter dentro de la arteria.
+  for (let node = mesh; node; node = node.parent) {
+    if (node.userData.kidneyPart === 'arteria') return 'Arteria renal';
+    if (node.userData.kidneyPart === 'vena') return 'Vena renal';
+  }
   return structureNameByVertexColor[colorKey] || `Región sin clasificar (${colorKey})`;
 }
 
@@ -145,7 +173,7 @@ function splitVertexColorsIntoMaterialGroups(mesh) {
   // Aunque solo exista una región, conservar su nombre para el raycast.
   if (trianglesByColor.size < 2) {
     const [colorKey] = trianglesByColor.keys();
-    mesh.material.name = getStructureName(colorKey);
+    mesh.material.name = getStructureName(colorKey, mesh);
     mesh.material.userData.vertexColorKey = colorKey;
     return;
   }
@@ -161,7 +189,7 @@ function splitVertexColorsIntoMaterialGroups(mesh) {
     geometry.addGroup(writeOffset, triangleIndices.length, materials.length);
 
     const material = mesh.material.clone();
-    material.name = getStructureName(colorKey);
+    material.name = getStructureName(colorKey, mesh);
     material.userData.vertexColorKey = colorKey;
     materials.push(material);
     writeOffset += triangleIndices.length;
@@ -176,7 +204,7 @@ const kidneyModelPairs = [
   { id: 'arteria', completo: './Models/Arteria_Completo.glb', corte: './Models/Arteria_Corte.glb' },
   { id: 'caliz', completo: './Models/Caliz_Completo.glb', corte: './Models/Caliz_Corte.glb' },
   { id: 'piramide', completo: './Models/Piramide_Completo.glb', corte: './Models/Piramide_Corte.glb' },
-  { id: 'rinon', completo: './Models/Rinon_completo.glb', corte: './Models/Rinon_Corte.glb' },
+  { id: 'rinon', completo: './Models/Rinon_textu.glb', corte: './Models/Rinon_Corte.glb' },
   { id: 'vena', completo: './Models/Vena_Completo.glb', corte: './Models/Vena_Corte.glb' }
 ];
 
@@ -205,7 +233,7 @@ function alignCompleteVariant(completePart, cutPart) {
 
 // La anatomía renal es una única unidad de escena, aunque sus piezas se entreguen
 // en archivos independientes. Así se rota, enfoca y selecciona como un solo riñón.
-Promise.all(
+const kidneyLoading = Promise.all(
   kidneyModelPairs.flatMap((pair) => [
     loader.loadAsync(pair.completo),
     loader.loadAsync(pair.corte)
@@ -219,6 +247,8 @@ Promise.all(
       const cutPart = gltfs[index * 2 + 1].scene;
       completePart.userData.variant = 'completo';
       cutPart.userData.variant = 'corte';
+      completePart.userData.kidneyPart = pair.id;
+      cutPart.userData.kidneyPart = pair.id;
       completePart.name = `${pair.id}_completo`;
       cutPart.name = `${pair.id}_corte`;
 
@@ -230,53 +260,68 @@ Promise.all(
     setupModel(kidneyModel);
     scene.add(kidneyModel);
     setCutView(isCutViewActive);
-    setXrayMode(isXrayActive);
+
     kidneyModel.visible = currentActiveTab === '1' && anatomyKind === 'kidney';
     anatomyBrowser.setModel('kidney', kidneyModel);
     if (kidneyModel.visible) focusCameraOn(kidneyModel);
+    return kidneyModel;
   })
-  .catch((err) => console.error('❌ Error al cargar las piezas del riñón:', err));
+  .catch((err) => {
+    console.error('Error al cargar las piezas del riñón:', err);
+    anatomyBrowser.setModelError('kidney');
+  });
 
 // Anatomía usa su propia instancia: ocultar/aislar aquí no altera Filtración.
-async function loadGlomerulusAnatomy() {
-  const status = document.querySelector('#anatomy-loading');
+async function loadDetailedAnatomy(kind) {
+  const nephron = kind === 'nephron';
+  const nephron85 = kind === 'nephron85';
   try {
-    const gltf = await loader.loadAsync('./Models/Glomerulo.glb');
-    glomerulusAnatomy = gltf.scene;
-    glomerulusAnatomy.name = 'Glomérulo: anatomía';
-    glomerulusAnatomy.scale.setScalar(.18);
-    glomerulusAnatomy.traverse(node => {
-      if (node.isMesh) prepareGlomerulusMesh(node, [], { anatomy: true });
+    const [gltf, regions] = await Promise.all([
+      loader.loadAsync(nephron85 ? './Models/Nefrona_85.glb' : nephron ? './Models/Nefrona_anatomia.glb' : './Models/Glomerulo.glb'),
+      nephron85 ? fetch('./nephron85-regions.json').then(response => { if (!response.ok) throw new Error('No se cargaron las regiones de Nefrona 85%.'); return response.json(); }) : null
+    ]);
+    const model = gltf.scene;
+    model.name = nephron85 ? 'Nefrona 85%' : nephron ? 'Nefrona: anatomía' : 'Glomérulo: anatomía';
+    if (nephron) model.rotation.y = -Math.PI / 2;
+    else if (!nephron85) { alignGlomerulusModel(model); model.scale.setScalar(.18); }
+    model.traverse(node => {
+      if (!node.isMesh) return;
+      if (nephron85) prepareNephron85Mesh(node, regions);
+      else if (nephron) prepareNephronMesh(node);
+      else prepareGlomerulusMesh(node, [], { anatomy: true });
     });
-    setupModel(glomerulusAnatomy);
-    scene.add(glomerulusAnatomy);
-    glomerulusAnatomy.visible = currentActiveTab === '1' && anatomyKind === 'glomerulus';
-    setXrayMode(isXrayActive);
-    anatomyBrowser.setModel('glomerulus', glomerulusAnatomy);
-    status.hidden = true;
+    setupModel(model);
+    scene.add(model);
+    model.visible = currentActiveTab === '1' && anatomyKind === kind;
+    if (nephron85) nephron85Anatomy = model;
+    else if (nephron) nephronAnatomy = model;
+    else glomerulusAnatomy = model;
+    anatomyBrowser.setModel(kind, model);
   } catch (error) {
-    console.error('Error al cargar el glomérulo de Anatomía:', error);
-    status.textContent = 'No se pudo cargar el glomérulo. Recarga la página para reintentar.';
-    status.hidden = currentActiveTab !== '1';
-    document.querySelector('#alternate-model-name').textContent = 'Glomérulo no disponible';
+    console.error('Error al cargar el modelo de Anatomía (' + kind + '):', error);
+    anatomyBrowser.setModelError(kind);
   }
 }
 
-const anatomyStrokes = { kidney: [], glomerulus: [] };
-const moduleStrokes = { '2': [], '3': [] };
-function switchAnatomyModel() {
+const anatomyStrokes = { kidney: [], glomerulus: [], nephron: [], nephron85: [] };
+const moduleStrokes = { '2': { kidney: [], nephron: [] }, '3': [] };
+function getAnatomyModel(kind = anatomyKind) {
+  return { kidney: kidneyModel, glomerulus: glomerulusAnatomy, nephron: nephronAnatomy, nephron85: nephron85Anatomy }[kind];
+}
+function switchAnatomyModel(next) {
   if (currentActiveTab !== '1') return;
-  const next = anatomyKind === 'kidney' ? 'glomerulus' : 'kidney';
-  const model = next === 'kidney' ? kidneyModel : glomerulusAnatomy;
+  const model = getAnatomyModel(next);
   if (!model) return;
   restoreIsolation(); setDrawingMode(false);
   anatomyKind = next;
   strokes = getAnnotationLayer('1', next);
   redrawAnnotations();
   if (kidneyModel) kidneyModel.visible = next === 'kidney';
-  glomerulusAnatomy.visible = next === 'glomerulus';
+  if (glomerulusAnatomy) glomerulusAnatomy.visible = next === 'glomerulus';
+  if (nephronAnatomy) nephronAnatomy.visible = next === 'nephron';
+  if (nephron85Anatomy) nephron85Anatomy.visible = next === 'nephron85';
   updateCutOnlyTools();
-  if (activeToolId === 'btn-highlight') activateSelectTool();
+  if (activeToolId === 'btn-highlight' || document.querySelector('.tool-btn.requires-cut.active')) activateSelectTool();
   anatomyBrowser.setKind(next);
   infoPanel.classList.remove('hidden');
   document.querySelector('#btn-panel').setAttribute('aria-expanded', 'true');
@@ -288,9 +333,9 @@ async function loadGlucose() {
   if (glucoseLoading) return glucoseLoading;
   const status = document.querySelector('#glucose-loading');
   status.hidden = currentActiveTab !== '2';
-  glucoseLoading = glucoseModule.load(loader).then(model => {
+  glucoseLoading = glucoseModule.load(loader, kidneyLoading).then(model => {
     status.hidden = true;
-    setXrayMode(isXrayActive);
+
     if (currentActiveTab === '2') focusCameraOn(model);
     return model;
   }).catch(error => {
@@ -310,7 +355,7 @@ async function loadFiltration() {
   status.hidden = currentActiveTab !== '3';
   filtrationLoading = filtrationModule.load(loader).then(model => {
     status.hidden = true;
-    setXrayMode(isXrayActive);
+
     if (currentActiveTab === '3') focusCameraOn(model);
     return model;
   }).catch(error => {
@@ -325,6 +370,10 @@ async function loadFiltration() {
 
 function focusCameraOn(model) {
   if (!model) return;
+  if (container.clientWidth > 0 && container.clientHeight > 0) {
+    camera.aspect = container.clientWidth / container.clientHeight;
+    camera.updateProjectionMatrix();
+  }
   const box = new THREE.Box3().setFromObject(model);
   const size = box.getSize(new THREE.Vector3());
   const maxDim = Math.max(size.x, size.y, size.z);
@@ -342,6 +391,7 @@ const annotationCanvas = document.querySelector('#annotation-canvas');
 const annotationContext = annotationCanvas.getContext('2d');
 const drawingControls = document.querySelector('#drawing-controls');
 const drawButton = document.querySelector('#btn-draw');
+const glucoseDrawButton = document.querySelector('#btn-glucose-draw');
 const closeDrawButton = document.querySelector('#btn-close-draw');
 const colorInput = document.querySelector('#draw-color');
 const widthInput = document.querySelector('#draw-width');
@@ -357,7 +407,7 @@ let previousToolButton = document.querySelector('#btn-select');
 let strokes = anatomyStrokes.kidney;
 
 function getAnnotationLayer(tab = currentActiveTab, kind = anatomyKind) {
-  return tab === '1' ? anatomyStrokes[kind] : moduleStrokes[tab];
+  return tab === '1' ? anatomyStrokes[kind] : tab === '2' ? moduleStrokes['2'][glucoseModule.view] : moduleStrokes[tab];
 }
 
 function resizeAnnotationCanvas() {
@@ -430,6 +480,9 @@ function setDrawingMode(enabled) {
   drawingControls.setAttribute('aria-hidden', String(!enabled));
   drawButton.classList.toggle('active', enabled);
   drawButton.setAttribute('aria-pressed', String(enabled));
+  glucoseDrawButton.classList.toggle('active', enabled);
+  glucoseDrawButton.setAttribute('aria-pressed', String(enabled));
+  glucoseDrawButton.setAttribute('aria-expanded', String(enabled));
   controls.enabled = !enabled;
   if (!enabled && previousToolButton) previousToolButton.classList.add('active');
 }
@@ -464,6 +517,7 @@ annotationCanvas.addEventListener('pointerup', finishStroke);
 annotationCanvas.addEventListener('pointercancel', finishStroke);
 
 drawButton.addEventListener('click', () => setDrawingMode(!drawingMode));
+glucoseDrawButton.addEventListener('click', () => setDrawingMode(!drawingMode));
 closeDrawButton.addEventListener('click', () => setDrawingMode(false));
 
 widthInput.addEventListener('input', () => {
@@ -512,7 +566,7 @@ let isolatedMaterial = null;
 let isolatedModel = null;
 
 function getActiveModel() {
-  return currentActiveTab === '1' ? (anatomyKind === 'kidney' ? kidneyModel : glomerulusAnatomy) : currentActiveTab === '2' ? glucoseModule.anatomy : filtrationModule.anatomy;
+  return currentActiveTab === '1' ? getAnatomyModel() : currentActiveTab === '2' ? glucoseModule.anatomy : filtrationModule.anatomy;
 }
 
 function isVisibleInHierarchy(object) {
@@ -545,7 +599,7 @@ function restoreIsolation() {
 }
 
 function sameAnatomicalRegion(material, selected) {
-  return material === selected || (anatomyKind === 'glomerulus' && material.name === selected?.name);
+  return material === selected || material.name === selected?.name;
 }
 
 function isolateMaterial(model, mesh, materialIndex = 0) {
@@ -603,39 +657,21 @@ function setCutView(enabled) {
       activeToolId = 'btn-select';
     }
   }
+  anatomyBrowser?.refresh();
 }
 
 function updateCutOnlyTools() {
-  const glomerulusActive = currentActiveTab === '1' && anatomyKind === 'glomerulus';
-  document.querySelector('#btn-highlight').hidden = glomerulusActive;
+  const detailedAnatomyActive = currentActiveTab === '1' && anatomyKind !== 'kidney';
+  document.querySelector('#btn-highlight').hidden = detailedAnatomyActive;
   ['btn-isolate', 'btn-hide', 'btn-highlight'].forEach((id) => {
     const button = document.querySelector(`#${id}`);
-    const locked = currentActiveTab !== '1' || (!glomerulusActive && id !== 'btn-highlight' && !isCutViewActive);
+    const locked = currentActiveTab !== '1' || (!detailedAnatomyActive && id !== 'btn-highlight' && !isCutViewActive);
     button.classList.toggle('requires-cut', locked);
     button.setAttribute('aria-disabled', String(locked));
     button.title = locked
       ? (currentActiveTab !== '1' ? 'Herramienta disponible en Anatomía.' : 'Activa el corte para usar esta herramienta.')
       : '';
   });
-}
-
-function setXrayMode(enabled) {
-  isXrayActive = enabled;
-  [kidneyModel, glomerulusAnatomy, filtrationModule.anatomy, glucoseModule.anatomy].forEach((model) => {
-    if (model) {
-      model.traverse((child) => {
-        if (child.isMesh) {
-          forEachMaterial(child, (material) => {
-            material.wireframe = enabled;
-            material.needsUpdate = true;
-          });
-        }
-      });
-    }
-  });
-  const xrayButton = document.querySelector('#btn-xray');
-  xrayButton.classList.toggle('xray-enabled', enabled);
-  xrayButton.setAttribute('aria-pressed', String(enabled));
 }
 
 function toggleMaterialTransparency(mesh, materialIndex = 0) {
@@ -645,8 +681,8 @@ function toggleMaterialTransparency(mesh, materialIndex = 0) {
 
   const makeTransparent = material.userData.atlasHidden !== true;
   const targets = [];
-  if (currentActiveTab === '1' && anatomyKind === 'glomerulus') {
-    glomerulusAnatomy.traverse(node => {
+  if (currentActiveTab === '1') {
+    getAnatomyModel().traverse(node => {
       if (node.isMesh) forEachMaterial(node, candidate => {
         if (sameAnatomicalRegion(candidate, material)) targets.push(candidate);
       });
@@ -680,6 +716,7 @@ canvas.addEventListener('click', (event) => {
     const materials = Array.isArray(object.material) ? object.material : [object.material];
     const material = materials[face?.materialIndex ?? 0];
     if (!material || material.visible === false) return false;
+    if (currentActiveTab === '1' && !anatomyBrowser.canSelect(material.name)) return false;
     // Durante el aislamiento ignoramos las regiones atenuadas para que un
     // segundo clic alcance siempre la región que debe restaurar la vista.
     return activeToolId !== 'btn-isolate' || !isolatedModel || sameAnatomicalRegion(material, isolatedMaterial);
@@ -696,7 +733,7 @@ canvas.addEventListener('click', (event) => {
 function applyAnatomySelection(model, mesh, materialIndex, tool) {
   const material = (Array.isArray(mesh.material) ? mesh.material : [mesh.material])[materialIndex];
   if (!material) return;
-  anatomyBrowser.select(material.name || mesh.name || 'Estructura seleccionada');
+  if (!anatomyBrowser.select(material.name || mesh.name || 'Estructura seleccionada')) return;
   infoPanel.classList.remove('hidden');
   document.querySelector('#btn-panel').setAttribute('aria-expanded', 'true');
   if (tool === 'btn-isolate') isolateMaterial(model, mesh, materialIndex);
@@ -705,7 +742,7 @@ function applyAnatomySelection(model, mesh, materialIndex, tool) {
 
 function selectAnatomyPart(name) {
   const model = getActiveModel();
-  if (!model || currentActiveTab !== '1') return;
+  if (!model || currentActiveTab !== '1' || !anatomyBrowser.canSelect(name)) return;
   let match = null;
   model.traverse(mesh => {
     if (!mesh.isMesh || !isVisibleInHierarchy(mesh)) return;
@@ -738,7 +775,8 @@ function initFormulas() {
     $('#btn-subtab-filtration').classList.toggle('active', type !== 'glucose');
     $('#glucose-content').style.display = type === 'glucose' ? 'block' : 'none';
     $('#filtration-content').style.display = type === 'glucose' ? 'none' : 'block';
-    structureTitle.textContent = type === 'glucose' ? 'Fisiología de la Glucosa' : 'Filtración Glomerular (Starling)';
+    structureTitle.textContent = type === 'glucose' ? 'Parámetros de glucosa' : 'Fuerzas de Starling';
+    formulaCarousel.setGroup(type);
   }
   $('#btn-subtab-glucose').addEventListener('click', () => setFormulaSubtab('glucose'));
   $('#btn-subtab-filtration').addEventListener('click', () => setFormulaSubtab('filtration'));
@@ -818,10 +856,21 @@ const formulasManager = initFormulas();
 // --- CAMBIO DE MÓDULOS EN LA BARRA SUPERIOR ---
 const tabBtns = document.querySelectorAll('.tab-btn');
 
+function updateModuleLayout(id) {
+  const glucose = id === '2', filtration = id === '3';
+  document.body.classList.toggle('glucose-screen-active', glucose);
+  document.body.classList.toggle('filtration-screen-active', filtration);
+  document.querySelector('#filtration-controls-panel').hidden = !filtration;
+  formulaCarousel.setActive(filtration);
+  document.querySelector('#glucose-controls-panel').hidden = !glucose;
+  document.querySelector('#glucose-note-tool').hidden = !(glucose || filtration);
+}
+
 function switchModule(id) {
   restoreIsolation();
   setDrawingMode(false);
   currentActiveTab = id;
+  updateModuleLayout(id);
   strokes = getAnnotationLayer();
   redrawAnnotations();
   updateCutOnlyTools();
@@ -834,7 +883,7 @@ function switchModule(id) {
   glucoseModule.setActive(id === '2');
   filtrationModule.setActive(id === '3');
   document.querySelector('#filtration-loading').hidden = id !== '3' || !!filtrationModule.simulation;
-  document.querySelector('#glucose-loading').hidden = id !== '2' || !!glucoseModule.simulation;
+  document.querySelector('#glucose-loading').hidden = id !== '2' || glucoseModule.ready;
   infoPanel.classList.remove('hidden');
   document.querySelector('#btn-panel').setAttribute('aria-expanded', 'true');
   tabBtns.forEach((btn) => btn.classList.toggle('active', btn.dataset.tab === id));
@@ -846,9 +895,11 @@ function switchModule(id) {
     kidneyModel.visible = id === '1' && anatomyKind === 'kidney';
   }
   if (glomerulusAnatomy) glomerulusAnatomy.visible = id === '1' && anatomyKind === 'glomerulus';
+  if (nephronAnatomy) nephronAnatomy.visible = id === '1' && anatomyKind === 'nephron';
+  if (nephron85Anatomy) nephron85Anatomy.visible = id === '1' && anatomyKind === 'nephron85';
   if (id === '1') focusCameraOn(getActiveModel());
   if (id === '2') {
-    if (glucoseModule.simulation) focusCameraOn(glucoseModule.root);
+    if (glucoseModule.ready) focusCameraOn(glucoseModule.root);
     else loadGlucose().catch(() => {});
   }
   if (id === '3') {
@@ -859,10 +910,19 @@ function switchModule(id) {
 
 tabBtns.forEach((btn) => btn.addEventListener('click', () => switchModule(btn.dataset.tab)));
 
+document.addEventListener('glucose-view-change', () => {
+  if (currentActiveTab !== '2') return;
+  setDrawingMode(false);
+  strokes = getAnnotationLayer();
+  redrawAnnotations();
+  focusCameraOn(glucoseModule.root);
+});
+
 function showHome() {
   restoreIsolation();
   setDrawingMode(false);
   currentActiveTab = '1';
+  updateModuleLayout('1');
   anatomyKind = 'kidney';
   strokes = getAnnotationLayer();
   redrawAnnotations();
@@ -870,6 +930,8 @@ function showHome() {
   filtrationModule.setActive(false);
   if (kidneyModel) kidneyModel.visible = true;
   if (glomerulusAnatomy) glomerulusAnatomy.visible = false;
+  if (nephronAnatomy) nephronAnatomy.visible = false;
+  if (nephron85Anatomy) nephron85Anatomy.visible = false;
   anatomyBrowser.setKind('kidney');
   anatomyBrowser.setActive(false);
   formulasManager.switchFormulaModule('1');
@@ -880,39 +942,27 @@ function showHome() {
 }
 
 document.querySelector('#btn-home').addEventListener('click', showHome);
+installScreenshotButton({
+  beforeCapture() {
+    resizeCanvas();
+    renderer.render(scene, camera);
+    // Las miniaturas se dibujan solo al cambiar; refrescarlas evita capturas vacías.
+    const previews = [anatomyBrowser.partPreview,
+      ...anatomyBrowser.modelButtons.map(item => item.preview),
+      ...glucoseModule.modelButtons.map(item => item.preview)];
+    for (const preview of previews) {
+      if (preview.canvas.getBoundingClientRect().width > 0) {
+        preview.resize();
+        preview.render();
+      }
+    }
+  }
+});
 document.querySelector('#btn-library').addEventListener('click', () => {
   document.body.classList.remove('home-screen-open');
   document.body.classList.add('library-screen-open');
 });
 document.querySelector('#btn-library-home').addEventListener('click', showHome);
-const libraryPdfDialog = document.querySelector('#library-pdf-dialog');
-const libraryPdfFrame = document.querySelector('#library-pdf-frame');
-const libraryPdfTitle = document.querySelector('#library-pdf-title');
-let libraryPdfTrigger = null;
-
-document.querySelectorAll('.library-view-button').forEach((button) => {
-  button.addEventListener('click', () => {
-    const file = button.closest('.library-file');
-    const title = file.querySelector('summary strong').textContent.trim();
-
-    libraryPdfTrigger = button;
-    libraryPdfTitle.textContent = title;
-    libraryPdfFrame.title = `Visor PDF: ${title}`;
-    libraryPdfFrame.src = button.dataset.previewUrl;
-    libraryPdfDialog.showModal();
-  });
-});
-
-document.querySelector('#library-pdf-close').addEventListener('click', () => {
-  libraryPdfDialog.close();
-});
-
-libraryPdfDialog.addEventListener('close', () => {
-  libraryPdfFrame.removeAttribute('src');
-  if (libraryPdfTrigger?.isConnected) libraryPdfTrigger.focus();
-  libraryPdfTrigger = null;
-});
-
 document.querySelectorAll('[data-home-tab]').forEach((button) => {
   button.addEventListener('click', () => {
     document.body.classList.remove('home-screen-open');
@@ -932,10 +982,6 @@ toolBtns.forEach((btn) => {
     if (btn.id === 'btn-draw') return;
     if (btn.classList.contains('requires-cut')) return;
 
-    if (btn.id === 'btn-xray') {
-      setXrayMode(!isXrayActive);
-      return;
-    }
 
     if (btn.id !== activeToolId) restoreIsolation();
     setDrawingMode(false);
@@ -966,9 +1012,11 @@ document.querySelector('#btn-panel').addEventListener('click', toggleInfoPanel);
 // --- LOOP DE ANIMACIÓN ---
 function animate() {
   requestAnimationFrame(animate);
+  const dt = Math.min(frameClock.getDelta(), .05);
+  // El visor oculto no necesita dibujar ni avanzar mientras se estudia en Biblioteca.
+  if (document.hidden || document.body.classList.contains('library-screen-open')) return;
   resizeCanvas();
   controls.update();
-  const dt = Math.min(frameClock.getDelta(), .05);
   glucoseModule.update(dt);
   filtrationModule.update(dt);
   renderer.render(scene, camera);
@@ -977,7 +1025,9 @@ function animate() {
 
 anatomyBrowser = new AnatomyBrowser(selectAnatomyPart, switchAnatomyModel);
 anatomyBrowser.refresh();
-loadGlomerulusAnatomy();
+loadDetailedAnatomy('glomerulus');
+loadDetailedAnatomy('nephron');
+loadDetailedAnatomy('nephron85');
 
 // Read-only handles used to inspect integration without changing the simulation.
 window.atlasRenal = { glucoseModule, filtrationModule, scene, camera, controls,

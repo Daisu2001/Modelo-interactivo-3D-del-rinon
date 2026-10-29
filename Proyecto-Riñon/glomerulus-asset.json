@@ -1,0 +1,24 @@
+{
+  "source": "Glomerulo_fixed_2.glb",
+  "sourceSha256": "6a33636ccb50bebfba6d4f88d7ea62067c6ed83ed023f4974f200e4d4bc58f1e",
+  "triangles": 10800,
+  "vertices": 6543,
+  "regionAttribute": "color_1",
+  "modelOrigin": [
+    -0.27604222297668457,
+    -0.031138598918914795,
+    0.05575452744960785
+  ],
+  "regionTriangles": {
+    "23,51,84": 1024,
+    "80,0,84": 3756,
+    "121,9,17": 484,
+    "121,84,23": 544,
+    "204,74,10": 552,
+    "237,181,130": 24,
+    "255,255,255": 4416
+  },
+  "afferentInlets": 1,
+  "efferentOutlets": 4,
+  "efferentSampleSpacing": 0.005
+}

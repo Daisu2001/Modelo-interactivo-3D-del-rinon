@@ -47,7 +47,7 @@ export class MeasuredPath extends THREE.Curve {
     THREE.MathUtils.lerp(this.radii[i],this.radii[i+1],f):2;}
 }
 
-export function createFluid(path,color,radius,speed=CONFIG.tubularSpeed,blood=false) {
+export function createFluid(path,color,radius,speed=CONFIG.tubularSpeed,blood=false,oneWay=false) {
   const segments=Math.max(80,Math.ceil(path.length/1.6));
   const geometry=new THREE.TubeGeometry(path,segments,1,10,false);
   const pos=geometry.attributes.position;const c=new THREE.Vector3(),v=new THREE.Vector3();
@@ -57,11 +57,13 @@ export function createFluid(path,color,radius,speed=CONFIG.tubularSpeed,blood=fa
   }
   geometry.computeVertexNormals();geometry.computeBoundingSphere();
   const material=new THREE.ShaderMaterial({transparent:true,depthWrite:false,
-    side:THREE.DoubleSide,uniforms:{uTime:{value:0},uColor:{value:new THREE.Color(color)},uLength:{value:path.length},uSpeed:{value:speed},uBlood:{value:blood?1:0},uFront:{value:1e9}},
+    side:THREE.DoubleSide,uniforms:{uTime:{value:0},uColor:{value:new THREE.Color(color)},uLength:{value:path.length},uSpeed:{value:speed},uBlood:{value:blood?1:0},uOneWay:{value:oneWay?1:0},uFront:{value:1e9}},
     vertexShader:`varying vec2 vUv; varying vec3 vNormal; void main(){vUv=uv;vNormal=normalize(normalMatrix*normal);gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}`,
-    fragmentShader:`uniform float uTime; uniform float uLength; uniform float uSpeed; uniform float uBlood; uniform float uFront; uniform vec3 uColor;varying vec2 vUv;varying vec3 vNormal;
-    void main(){if(vUv.x*uLength>uFront)discard;float wave=.5+.5*sin(vUv.x*uLength*.16-uTime*uSpeed*.16);
-      float ripple=.5+.5*sin(vUv.x*uLength*.31-uTime*uSpeed*.31+sin(vUv.y*6.283)*.7);
+    fragmentShader:`uniform float uTime; uniform float uLength; uniform float uSpeed; uniform float uBlood; uniform float uOneWay; uniform float uFront; uniform vec3 uColor;varying vec2 vUv;varying vec3 vNormal;
+    void main(){if(vUv.x*uLength>uFront)discard;
+      float waveFrequency=uOneWay>.5?.06:.16;float rippleFrequency=uOneWay>.5?.09:.31;
+      float wave=.5+.5*sin((vUv.x*uLength-uTime*uSpeed)*waveFrequency);
+      float ripple=.5+.5*sin((vUv.x*uLength-uTime*uSpeed)*rippleFrequency+sin(vUv.y*6.283)*.7);
       float sheen=pow(abs(vNormal.z),3.);vec3 color=uColor*(.60+.30*wave)+vec3(.25)*sheen;
       if(uBlood>.5){
         float pulse=.76+.24*wave;vec3 crimson=uColor*pulse+vec3(.10,.025,.018)*sheen;
@@ -73,9 +75,12 @@ export function createFluid(path,color,radius,speed=CONFIG.tubularSpeed,blood=fa
 // Vascular volume and red blood cells have their OWN path and lifetime. They never
 // enter the glucose/filtration state machine or the yellow tubular centerline.
 export class BloodStream {
-  constructor(path){
+  constructor(path, { cellRadiusAt = null, lateralOffset = .28, oneWay = false,
+    cellSpacing = CONFIG.bloodCellSpacing } = {}){
+    this.cellRadiusAt=cellRadiusAt;this.lateralOffset=lateralOffset;
+    this.oneWay=oneWay;this.cellSpacing=cellSpacing;
     this.path=path;this.group=new THREE.Group();this.group.name='Sangre: circuito vascular';
-    this.fluid=createFluid(path,'#970c20',undefined,CONFIG.bloodSpeed,true);
+    this.fluid=createFluid(path,'#970c20',undefined,CONFIG.bloodSpeed,true,oneWay);
     this.fluid.name='Estela roja continua';this.fluid.renderOrder=3;this.group.add(this.fluid);
     const geometry=new THREE.SphereGeometry(1,14,10),pos=geometry.attributes.position;
     // Procedural biconcave discs: a thin center and a thicker rounded rim.
@@ -83,33 +88,65 @@ export class BloodStream {
       const x=pos.getX(i),y=pos.getY(i),z=pos.getZ(i),r2=x*x+y*y;
       pos.setZ(i,z*(.12+.62*r2));
     }geometry.computeVertexNormals();
-    this.capacity=Math.ceil(path.length/CONFIG.bloodCellSpacing)+1;
+    this.capacity=Math.ceil(path.length/cellSpacing)+(oneWay?2:1);
     this.cells=new THREE.InstancedMesh(geometry,new THREE.MeshStandardMaterial({
       color:'#b81227',roughness:.38,metalness:0,transparent:true,depthWrite:false,
       emissive:'#51030b',emissiveIntensity:.25}),this.capacity);
     this.cells.name='Glóbulos rojos: solo vasos';this.cells.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
     this.cells.frustumCulled=false;this.cells.renderOrder=4;this.group.add(this.cells);
-    this.dummy=new THREE.Object3D();this.cellPositions=[];this.elapsed=0;this.update(0);
+    this.dummy=new THREE.Object3D();this.cellPositions=[];this.activeSlots=[];
+    this.hiddenMatrix=new THREE.Matrix4().makeScale(0,0,0);
+    if(oneWay)for(let i=0;i<this.capacity;i++)this.cells.setMatrixAt(i,this.hiddenMatrix);
+    this.elapsed=0;this.update(0);
   }
   update(elapsed,speed=CONFIG.bloodSpeed){
     this.elapsed=elapsed;this.frontDistance=elapsed*speed;
     this.fluid.material.uniforms.uSpeed.value=speed;
     this.fluid.material.uniforms.uFront.value=Math.min(this.frontDistance,this.path.length+2);
     this.fluid.material.uniforms.uTime.value=elapsed;
+    if(this.oneWay){this.drawOneWayCells(elapsed);return;}
     const visibleLength=Math.min(this.frontDistance,this.path.length);
-    const phase=(elapsed*speed)%CONFIG.bloodCellSpacing;
+    const phase=(elapsed*speed)%this.cellSpacing;
     let count=0;this.cellPositions.length=0;
-    for(let d=phase;visibleLength>0&&d<=visibleLength;d+=CONFIG.bloodCellSpacing){
+    for(let d=phase;visibleLength>0&&d<=visibleLength;d+=this.cellSpacing){
       const u=d/this.path.length,tangent=this.path.getTangent(u);
       const side=new THREE.Vector3().crossVectors(tangent,new THREE.Vector3(0,0,1)).normalize();
       if(side.lengthSq()<.1)side.set(1,0,0);
-      const center=this.path.getPoint(u);center.addScaledVector(side,.28*Math.sin(count*2.4+elapsed*.4));
+      const center=this.path.getPoint(u);center.addScaledVector(side,this.lateralOffset*Math.sin(count*2.4+elapsed*.4));
       this.dummy.position.copy(center);this.dummy.quaternion.setFromUnitVectors(new THREE.Vector3(0,0,1),tangent);
-      this.dummy.rotateZ(count*1.73+elapsed*.2);this.dummy.scale.setScalar(CONFIG.bloodCellRadius);
+      this.dummy.rotateZ(count*1.73+elapsed*.2);this.dummy.scale.setScalar(this.cellRadiusAt?.(u)??CONFIG.bloodCellRadius);
       this.dummy.updateMatrix();this.cells.setMatrixAt(count,this.dummy.matrix);
       this.cellPositions.push({distance:d,point:center.clone()});count++;
     }
     this.cells.count=count;this.cells.instanceMatrix.needsUpdate=true;
+  }
+  drawOneWayCells(elapsed){
+    // A slot belongs to one emitted cell until it has left the vessel. Wrapping
+    // the whole row by its spacing makes identifiable red cells jump upstream.
+    for(const slot of this.activeSlots)this.cells.setMatrixAt(slot,this.hiddenMatrix);
+    this.activeSlots.length=0;this.cellPositions.length=0;
+    let lastSlot=-1;
+    if(this.frontDistance>0){
+      const first=Math.max(0,Math.ceil((this.frontDistance-this.path.length)/this.cellSpacing));
+      const last=Math.floor(this.frontDistance/this.cellSpacing);
+      const fadeLength=Math.min(8,this.path.length/4);
+      for(let id=first;id<=last;id++){
+        const distance=this.frontDistance-id*this.cellSpacing;
+        if(distance<=0||distance>=this.path.length)continue;
+        const u=distance/this.path.length,tangent=this.path.getTangent(u),center=this.path.getPoint(u);
+        const slot=id%this.capacity;
+        const fade=THREE.MathUtils.smoothstep(distance,0,fadeLength)
+          *(1-THREE.MathUtils.smoothstep(distance,this.path.length-fadeLength,this.path.length));
+        this.dummy.position.copy(center);
+        this.dummy.quaternion.setFromUnitVectors(new THREE.Vector3(0,0,1),tangent);
+        this.dummy.rotateZ(id*1.73+elapsed*.2);
+        this.dummy.scale.setScalar((this.cellRadiusAt?.(u)??CONFIG.bloodCellRadius)*fade);
+        this.dummy.updateMatrix();this.cells.setMatrixAt(slot,this.dummy.matrix);
+        this.activeSlots.push(slot);lastSlot=Math.max(lastSlot,slot);
+        this.cellPositions.push({id,slot,distance,point:center.clone()});
+      }
+    }
+    this.cells.count=lastSlot+1;this.cells.instanceMatrix.needsUpdate=true;
   }
 }
 
