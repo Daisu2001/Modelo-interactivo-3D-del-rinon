@@ -14,6 +14,8 @@
       }
     }
   </script>
+  <!-- MSAL Browser 4.x cargado desde script clásico local sin CDN -->
+  <script src="./vendor/msal-browser.min.js"></script>
 </head>
 <body class="home-screen-open">
   <div id="app">
@@ -30,14 +32,12 @@
         <button class="icon-btn icon-label-control" id="btn-panel" title="Mostrar / ocultar panel informativo" aria-label="Mostrar / ocultar panel informativo" aria-expanded="true"><span data-icon="panel" aria-hidden="true"></span></button>
       </div>
     </header>
-
     <main class="main-container">
       <section class="home-intro" aria-labelledby="home-title">
         <div class="home-brand"><span class="home-brand-mark">R</span><span>ATLAS RENAL</span></div>
         <p class="home-eyebrow">Explora el cuerpo humano</p>
         <h1 id="home-title">Un viaje al<br><span>interior del riñón</span></h1>
         <p class="home-description">Descubre cómo funciona este órgano a través de modelos interactivos y simulaciones.</p>
-
         <nav class="home-options" aria-label="Secciones del Atlas renal">
           <button class="home-option" type="button" data-home-tab="1">
             <span class="home-option-icon" data-icon="kidney" aria-hidden="true"></span>
@@ -55,7 +55,6 @@
             <span class="home-option-arrow" aria-hidden="true" data-icon="external"></span>
           </button>
         </nav>
-
         <div class="home-secondary-options" aria-label="Más recursos">
           <button class="home-secondary-option" id="btn-library" type="button">
             <span aria-hidden="true" data-icon="book"></span> Biblioteca <small>6 PDF</small>
@@ -66,7 +65,6 @@
         </div>
         <p class="home-footer">Atlas Renal <span>·</span> Aprende explorando</p>
       </section>
-
       <section class="library-page" aria-labelledby="library-title">
         <button class="library-back-button" id="btn-library-home" type="button">
           <span aria-hidden="true" data-icon="left"></span> Volver a Home
@@ -252,7 +250,6 @@
           </section>
         </div>
       </section>
-
       <dialog id="library-reader" class="library-reader" aria-labelledby="library-reader-title">
         <header class="library-reader-header"><div><p id="library-reader-kind" class="home-eyebrow"></p><h2 id="library-reader-title"></h2></div><div class="library-reader-actions"><button id="library-reader-annotate" type="button" aria-pressed="false" class="icon-label-control"><span data-icon="pencil" aria-hidden="true"></span> Anotar</button><a id="library-reader-download" target="_blank" rel="noopener noreferrer" class="icon-label-control"><span data-icon="download" aria-hidden="true"></span> Descargar PDF</a><a id="library-reader-source" target="_blank" rel="noopener noreferrer" class="icon-label-control"><span data-icon="external" aria-hidden="true"></span> Abrir original</a><button id="library-reader-close" type="button" aria-label="Cerrar visor" class="icon-label-control"><span data-icon="close" aria-hidden="true"></span></button></div></header>
         <div class="library-reader-meta"><p id="library-reader-hint"></p><label id="library-page-label">Página de tus anotaciones <input type="number" id="library-note-page" min="1" max="10000" value="1" aria-label="Número de página para guardar tus anotaciones"></label><span id="library-video-time" hidden></span></div>
@@ -273,7 +270,6 @@
         <div id="library-reader-status" role="status" aria-live="polite"></div>
         <div class="library-reader-body"><div id="library-reader-stage" class="library-reader-stage"><div id="library-reader-media"></div><canvas id="library-reader-ink" aria-label="Dibuja tus anotaciones sobre el recurso" hidden></canvas></div><aside id="library-video-notes" class="library-video-notes" hidden><h3>Mis anotaciones</h3><p>Selecciona un momento para volver a tus trazos.</p><div id="library-video-note-list"></div></aside></div>
       </dialog>
-
       <aside class="toolbar-left">
         <button class="tool-btn active" id="btn-select">
           <span class="icon" data-icon="select" aria-hidden="true"></span><span class="label">Seleccionar</span>
@@ -287,14 +283,12 @@
         <button class="tool-btn" id="btn-hide">
           <span class="icon" data-icon="eye" aria-hidden="true"></span><span class="label">Mostrar / ocultar</span>
         </button>
-
         <!-- Nueva herramienta de anotaciones -->
         <div class="toolbar-divider"></div>
         <button class="tool-btn" id="btn-draw" aria-pressed="false">
           <span class="icon" data-icon="pencil" aria-hidden="true"></span><span class="label">Anotar</span>
         </button>
       </aside>
-
       <aside id="glucose-controls-panel" class="glucose-controls-panel" aria-labelledby="glucose-controls-title" hidden>
         <header class="glucose-controls-header"><span>VIAJE DE LA GLUCOSA</span><h2 id="glucose-controls-title">Simulación</h2></header>
             <section class="simulation-controls" aria-label="Control de simulación">
@@ -315,7 +309,6 @@
                 <button type="button" data-mode="normal" aria-pressed="false">Normal</button>
                 <button type="button" data-mode="glucosuria" aria-pressed="false">Glucosuria</button>
               </div>
-
               </div>
               <div class="simulation-actions">
                 <button type="button" id="pause" class="icon-label-control"><span data-icon="pause" aria-hidden="true"></span> Pausar</button>
@@ -326,11 +319,8 @@
               <label class="range-label" for="opacity">Opacidad de las paredes <output id="opacity-value">20%</output></label>
               <input id="opacity" type="range" min="0.04" max="0.8" step="0.01" value="0.2">
               <label class="vessels-check"><input id="vessels" type="checkbox" checked> Mostrar vasos sanguíneos</label>
-
-
             </section>
       </aside>
-
       <aside id="filtration-controls-panel" class="glucose-controls-panel filtration-controls-panel" aria-labelledby="filtration-controls-title" hidden><header class="glucose-controls-header"><span>FILTRACIÓN</span><h2 id="filtration-controls-title">Simulación</h2></header><section class="glomerulus-controls" aria-label="Simulación del glomérulo">
                 <div class="glomerulus-heading"><h3>Glomérulo · simulación</h3><span id="filtration-source">TFG de Starling</span></div>
                 <p id="filtration-flow-state">Filtración normal</p>
@@ -369,7 +359,6 @@
             </button>
           </div>
         </nav>
-
         <nav id="glucose-model-picker" class="anatomy-model-picker glucose-model-picker" aria-label="Cambiar escala del recorrido" hidden>
           <span class="model-switch-eyebrow">Explorar el recorrido</span>
           <div class="anatomy-model-options">
@@ -391,10 +380,8 @@
         <div id="filtration-pause-notice" class="simulation-pause-notice" role="status" hidden>Simulación en pausa</div>
         <div id="filtration-legend" class="filtration-legend" hidden><span><i class="legend-blood"></i>Sangre</span><span><i class="legend-filtrate"></i>Filtrado</span><span><i class="legend-glucose"></i>Glucosa</span></div>
         <div id="pause-notice" class="simulation-pause-notice" role="status" hidden>Simulación en pausa</div>
-
         <!-- Pizarra transparente superpuesta al visor 3D -->
         <canvas id="annotation-canvas" aria-label="Pizarra de anotaciones"></canvas>
-
         <div class="drawing-controls" id="drawing-controls" aria-hidden="true">
           <div class="drawing-status"><span></span> Modo anotación</div>
           <label title="Color del marcador">
@@ -427,7 +414,6 @@
                     <span class="formula-result-value" id="res-fglu">125.0 mg/min</span>
                   </div>
                 </div>
-
                 <div class="formula-card" role="group" title="90% reabsorbido por SGLT2 (S1/S2) y 10% por SGLT1 (S3). El modelo usa R = min(carga filtrada, TmG). El umbral de saturación depende de TmG y TFG." aria-description="90% reabsorbido por SGLT2 (S1/S2) y 10% por SGLT1 (S3). El modelo usa R = min(carga filtrada, TmG). El umbral de saturación depende de TmG y TFG.">
                   <div class="formula-card-header">
                     <span class="formula-title">2. Reabsorción Tubular (R<sub>Glu</sub>)</span>
@@ -445,7 +431,6 @@
                     <span class="formula-result-value" id="res-rglu">125.0 mg/min</span>
                   </div>
                 </div>
-
                 <div class="formula-card" role="group" title="Glucosa no reabsorbida que pasa a la orina hacia la pelvis renal y el uréter." aria-description="Glucosa no reabsorbida que pasa a la orina hacia la pelvis renal y el uréter.">
                   <div class="formula-card-header">
                     <span class="formula-title">3. Excreción Urinaria (E<sub>Glu</sub>)</span>
@@ -460,7 +445,6 @@
                     <span class="formula-result-value" id="res-eglu">0.0 mg/min</span>
                   </div>
                 </div>
-
                 <div class="formula-card" role="group">
                   <div class="formula-card-header">
                     <span class="formula-title">4. Fracción Excretada (FE<sub>Glu</sub>)</span>
@@ -489,7 +473,6 @@
                     <span class="formula-result-value" id="res-pfn">+10.0 mmHg</span>
                   </div>
                 </div>
-
                 <div class="formula-card" role="group" title="Kf representa el coeficiente de conductividad hidráulica y área de superficie de filtración." aria-description="Kf representa el coeficiente de conductividad hidráulica y área de superficie de filtración.">
                   <div class="formula-card-header">
                     <span class="formula-title">2. TFG = K<sub>f</sub> × PFN</span>
@@ -506,7 +489,6 @@
                 </div>
               </div>
 </section></div>
-
       <aside class="info-panel-right" id="info-panel">
         <div class="panel-header">
           <h2 id="structure-title">Corteza renal</h2>
@@ -532,13 +514,11 @@
               <ul class="structure-list" id="structure-list"></ul>
             </div>
           </div>
-
           <div id="glucose-view" class="panel-view" style="display: none;">
             <section id="kidney-journey-info" class="kidney-journey-info" aria-label="Recorrido renal">
               <h3>Recorrido</h3>
               <p>La sangre con glucosa entra por la arteria renal, recorre la red vascular del riñón y regresa por la vena renal.</p>
               <p>La orina sigue otra vía: cálices → pelvis renal → uréter.</p>
-
             </section>
             <div id="nephron-journey-info" hidden>
             <ol class="glucose-steps" aria-label="Pasos del recorrido de la glucosa">
@@ -560,7 +540,6 @@
                 <div><dt>Glucosa que llegó al colector</dt><dd id="collector">0</dd></div>
               </dl>
             </div>
-
             <section class="glucose-legend-section" aria-label="Colores de las partículas">
               <h3>En el visor</h3>
               <ul class="glucose-particle-legend">
@@ -581,7 +560,6 @@
                 <button class="formula-subtab active" id="btn-subtab-glucose">Glucosa (SGLT2/TmG)</button>
                 <button class="formula-subtab" id="btn-subtab-filtration">Filtración (Starling)</button>
               </div>
-
               <!-- MÓDULO DE GLUCOSA RENAL -->
               <div id="glucose-content">
                 <!-- Parámetros clínicos interactivos -->
@@ -590,7 +568,6 @@
                     <span class="controls-title">Parámetros Clínicos</span>
                     <span class="formula-badge" id="glucose-clinical-state">Normal</span>
                   </div>
-
                   <div class="param-group">
                     <div class="param-label">
                       <span>Glucemia Plasmática (P<sub>Glu</sub>):</span>
@@ -598,7 +575,6 @@
                     </div>
                     <input type="range" class="param-slider" id="slider-pglu" min="50" max="400" value="100">
                   </div>
-
                   <div class="param-group">
                     <div class="param-label">
                       <span>Filtración Glomerular (TFG):</span>
@@ -606,7 +582,6 @@
                     </div>
                     <input type="range" class="param-slider" id="slider-tfg" min="0" max="625" step="0.1" value="125">
                   </div>
-
                   <div class="param-group">
                     <div class="param-label">
                       <span>Transporte Máximo (TmG):</span>
@@ -614,7 +589,6 @@
                     </div>
                     <input type="range" class="param-slider" id="slider-tmg" min="200" max="210" value="205">
                   </div>
-
                   <!-- Presets rápidos -->
                   <div class="preset-pills">
                     <button class="preset-pill active" data-preset="normal">Normal (90)</button>
@@ -622,18 +596,11 @@
                     <button class="preset-pill" data-preset="glucosuria">Glucosuria (240)</button>
                     <button class="preset-pill" data-preset="tmg">TmG Máx (210)</button>
                   </div>
-
                   <div class="clinical-status-tag normal" id="glucose-status-tag">
                     <span data-icon="check" aria-hidden="true"></span> <span id="glucose-status-text">Glucemia fisiológica normal. Sin pérdida de glucosa.</span>
                   </div>
                 </div>
-
-                <!-- Tarjeta 1: Carga Filtrada (FGlu) -->
-                <!-- Tarjeta 2: Reabsorción Tubular (RGlu) -->
-                <!-- Tarjeta 3: Excreción Urinaria (EGlu) -->
-                <!-- Tarjeta 4: Fracción Excretada (FEGlu) -->
                 </div>
-
               <!-- MÓDULO DE FILTRACIÓN GLOMERULAR / STARLING -->
               <div id="filtration-content" style="display: none;">
                 <!-- Parámetros de Fuerzas de Starling -->
@@ -642,7 +609,6 @@
                     <span class="controls-title">Fuerzas de Starling</span>
                     <span class="formula-badge teal">Presiones</span>
                   </div>
-
                   <div class="param-group">
                     <div class="param-label">
                       <span>P<sub>GC</sub> (Hidrostática Capilar):</span>
@@ -650,7 +616,6 @@
                     </div>
                     <input type="range" class="param-slider" id="slider-pgc" min="45" max="75" value="60">
                   </div>
-
                   <div class="param-group">
                     <div class="param-label">
                       <span>P<sub>BS</sub> (Hidrostática Bowman):</span>
@@ -658,7 +623,6 @@
                     </div>
                     <input type="range" class="param-slider" id="slider-pbs" min="10" max="25" value="18">
                   </div>
-
                   <div class="param-group">
                     <div class="param-label">
                       <span>π<sub>GC</sub> (Oncótica Capilar):</span>
@@ -666,7 +630,6 @@
                     </div>
                     <input type="range" class="param-slider" id="slider-pigc" min="20" max="40" value="32">
                   </div>
-
                   <div class="param-group">
                     <div class="param-label">
                       <span>π<sub>BS</sub> (Oncótica Bowman):</span>
@@ -674,20 +637,13 @@
                     </div>
                     <input type="range" class="param-slider" id="slider-pibs" min="0" max="5" value="0">
                   </div>
-
                   <div class="clinical-status-tag normal" id="starling-status-tag">
                     <span data-icon="check" aria-hidden="true"></span> <span id="starling-status-text">Ultrafiltración glomerular fisiológica activa.</span>
                   </div>
                 </div>
-
-                <!-- Tarjeta 1: Presión de Filtración Neta (PFN) -->
-                <!-- Tarjeta 2: TFG estimada por Starling -->
                 </div>
             </div>
           </div>
-          <!-- ============================================================= -->
-          <!-- === [FIN: SECCIÓN DE FÓRMULAS FISIOLÓGICAS (NUEVO)] ========== -->
-          <!-- ============================================================= -->
         </div>
       </aside>
     </main>
@@ -695,5 +651,6 @@
   <div id="capture-status" class="capture-status" role="status" aria-live="polite" data-html2canvas-ignore hidden></div>
   <script type="module" src="library.js"></script>
   <script type="module" src="main.js"></script>
+  <script type="module" src="microsoft.js"></script>
 </body>
 </html>

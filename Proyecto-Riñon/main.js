@@ -64,14 +64,11 @@ const glucoseModule = new GlucoseModule(scene);
 const filtrationModule = new FiltrationModule(scene);
 const formulaCarousel = new FormulaCarousel();
 
-// Completar o corregir este mapa cuando el artista entregue la equivalencia
-// semántica de los colores de segmentación. El RGB se obtiene del atributo
-// COLOR_0 del GLB y el valor se muestra directamente en el panel informativo.
 const structureNameByVertexColor = {
   '255,0,0': 'Corteza renal',
-  '80,27,17': 'Corteza renal', // Identificador del riñón texturizado.
-  '0,255,255': 'Corteza renal', // Superficie del riñón de corte.
-  '255,0,255': 'Corteza renal', // Borde de la misma pieza de corte.
+  '80,27,17': 'Corteza renal',
+  '0,255,255': 'Corteza renal',
+  '255,0,255': 'Corteza renal',
   '25,255,118': 'Pirámides renales',
   '0,80,47': 'Pirámides renales',
   '255,37,46': 'Arteria renal',
@@ -101,15 +98,12 @@ function setupModel(model) {
 
   model.traverse((child) => {
     if (child.isMesh) {
-      // Los GLB comparten materiales entre meshes con frecuencia. Clonarlos aquí
-      // evita que ocultar una pieza cambie accidentalmente otra que usa el mismo material.
       if (child.material) {
         child.material = Array.isArray(child.material)
           ? child.material.map((material) => material.clone())
           : child.material.clone();
         splitVertexColorsIntoMaterialGroups(child);
         forEachMaterial(child, (material) => {
-          // COLOR_0 identifica regiones para seleccionar; la textura define su aspecto.
           if (material.map) material.vertexColors = false;
           material.side = THREE.DoubleSide;
           material.transparent = false;
@@ -131,9 +125,6 @@ function forEachMaterial(mesh, callback) {
 }
 
 function getVertexColorKey(colorAttribute, vertexIndex) {
-  // Los GLB de vasos se exportaron con identificadores de color por vértice,
-  // pero sin slots de materiales. Cuantizar evita separar caras que comparten
-  // visualmente el mismo color por pequeñas diferencias de coma flotante.
   const red = Math.round(colorAttribute.getX(vertexIndex) * 255);
   const green = Math.round(colorAttribute.getY(vertexIndex) * 255);
   const blue = Math.round(colorAttribute.getZ(vertexIndex) * 255);
@@ -141,8 +132,6 @@ function getVertexColorKey(colorAttribute, vertexIndex) {
 }
 
 function getStructureName(colorKey, mesh) {
-  // En los archivos vasculares, los colores de los bordes de corte son tapas
-  // del mismo vaso. No identifican una vena o un uréter dentro de la arteria.
   for (let node = mesh; node; node = node.parent) {
     if (node.userData.kidneyPart === 'arteria') return 'Arteria renal';
     if (node.userData.kidneyPart === 'vena') return 'Vena renal';
@@ -170,7 +159,6 @@ function splitVertexColorsIntoMaterialGroups(mesh) {
     );
   }
 
-  // Aunque solo exista una región, conservar su nombre para el raycast.
   if (trianglesByColor.size < 2) {
     const [colorKey] = trianglesByColor.keys();
     mesh.material.name = getStructureName(colorKey, mesh);
@@ -226,13 +214,9 @@ function alignCompleteVariant(completePart, cutPart) {
   const completePosition = completeMesh.getWorldPosition(new THREE.Vector3());
   const cutPosition = cutMesh.getWorldPosition(new THREE.Vector3());
 
-  // Las exportaciones completas conservan un origen distinto de sus pares de
-  // corte. Esta corrección hace que cada par ocupe la misma referencia.
   completePart.position.add(cutPosition.sub(completePosition));
 }
 
-// La anatomía renal es una única unidad de escena, aunque sus piezas se entreguen
-// en archivos independientes. Así se rota, enfoca y selecciona como un solo riñón.
 const kidneyLoading = Promise.all(
   kidneyModelPairs.flatMap((pair) => [
     loader.loadAsync(pair.completo),
@@ -255,7 +239,6 @@ const kidneyLoading = Promise.all(
       alignCompleteVariant(completePart, cutPart);
       kidneyModel.add(completePart, cutPart);
     });
-    // Se conserva la orientación común de los modelos entregados.
     kidneyModel.rotation.y = Math.PI;
     setupModel(kidneyModel);
     scene.add(kidneyModel);
@@ -271,7 +254,6 @@ const kidneyLoading = Promise.all(
     anatomyBrowser.setModelError('kidney');
   });
 
-// Anatomía usa su propia instancia: ocultar/aislar aquí no altera Filtración.
 async function loadDetailedAnatomy(kind) {
   const nephron = kind === 'nephron';
   const nephron85 = kind === 'nephron85';
@@ -380,7 +362,7 @@ function focusCameraOn(model) {
   const center = box.getCenter(new THREE.Vector3());
   const verticalFov = THREE.MathUtils.degToRad(camera.fov);
   const horizontalFov = 2 * Math.atan(Math.tan(verticalFov / 2) * camera.aspect);
-  const distance = maxDim > 0 ? maxDim / (2 * Math.tan(Math.min(verticalFov, horizontalFov) / 2)) * 1.22 : 10;
+  const distance = maxDim > 0 ? maxDim / (2 * Math.atan(Math.min(verticalFov, horizontalFov) / 2)) * 1.22 : 10;
   camera.position.copy(center).add(new THREE.Vector3(0, 0, distance));
   controls.target.copy(center);
   controls.update();
@@ -468,8 +450,6 @@ function getNormalizedPoint(event) {
 function setDrawingMode(enabled) {
   drawingMode = enabled;
   if (enabled) {
-    // Dibujar sustituye la herramienta activa; una pieza aislada no debe quedar
-    // oculta cuando el usuario vuelva a la escena.
     restoreIsolation();
     previousToolButton =
       document.querySelector('.tool-btn.active:not(#btn-draw)') || previousToolButton;
@@ -510,6 +490,9 @@ function finishStroke(event) {
   if (currentStroke && annotationCanvas.hasPointerCapture(event.pointerId)) {
     annotationCanvas.releasePointerCapture(event.pointerId);
   }
+  if (currentStroke && currentStroke.points.length > 0) {
+    document.dispatchEvent(new CustomEvent('atlas-annotations-changed'));
+  }
   currentStroke = null;
 }
 
@@ -531,16 +514,21 @@ eraserButton.addEventListener('click', () => {
 });
 
 undoButton.addEventListener('click', () => {
-  strokes.pop();
-  redrawAnnotations();
+  if (strokes.length > 0) {
+    strokes.pop();
+    redrawAnnotations();
+    document.dispatchEvent(new CustomEvent('atlas-annotations-changed'));
+  }
 });
 
 clearButton.addEventListener('click', () => {
-  strokes.length = 0;
-  redrawAnnotations();
+  if (strokes.length > 0) {
+    strokes.length = 0;
+    redrawAnnotations();
+    document.dispatchEvent(new CustomEvent('atlas-annotations-changed'));
+  }
 });
 
-// --- AJUSTE RESPONSIVE DE AMBOS CANVAS ---
 function resizeCanvas() {
   const width = container.clientWidth;
   const height = container.clientHeight;
@@ -612,17 +600,12 @@ function isolateMaterial(model, mesh, materialIndex = 0) {
     return;
   }
 
-  // Mientras haya un material aislado, ningún otro clic puede cambiar la
-  // selección. La restauración ocurre exclusivamente al repetir el clic
-  // sobre ese mismo material (o al cambiar de herramienta).
   if (isolatedModel) return;
   model.traverse((child) => {
     if (child.isMesh) {
       child.visible = true;
       forEachMaterial(child, (material) => {
         const isSelected = sameAnatomicalRegion(material, selectedMaterial);
-        // Aislar conserva el contexto anatómico: la región elegida queda opaca
-        // y el resto se atenúa, en vez de desaparecer físicamente.
         material.visible = true;
         material.transparent = !isSelected;
         material.opacity = isSelected ? 1.0 : HIDDEN_OPACITY;
@@ -643,8 +626,6 @@ function setCutView(enabled) {
   if (!kidneyModel) return;
 
   kidneyModel.children.forEach((part) => {
-    // Cada modelo nuevo tiene una variante _Completo y una _Corte. El corte
-    // reemplaza todas las variantes completas por su par correspondiente.
     part.visible = part.userData.variant === (enabled ? 'corte' : 'completo');
   });
   if (!enabled) {
@@ -710,15 +691,11 @@ canvas.addEventListener('click', (event) => {
   const intersects = raycaster.intersectObjects(activeModel.children, true);
   const activeToolId = document.querySelector('.tool-btn.active')?.id;
   const hit = intersects.find(({ object, face }) => {
-    // Raycaster puede devolver geometría de una variante _Completo aunque su
-    // padre esté oculto por la vista de corte. Esos impactos no son interactivos.
     if (!isVisibleInHierarchy(object)) return false;
     const materials = Array.isArray(object.material) ? object.material : [object.material];
     const material = materials[face?.materialIndex ?? 0];
     if (!material || material.visible === false) return false;
     if (currentActiveTab === '1' && !anatomyBrowser.canSelect(material.name)) return false;
-    // Durante el aislamiento ignoramos las regiones atenuadas para que un
-    // segundo clic alcance siempre la región que debe restaurar la vista.
     return activeToolId !== 'btn-isolate' || !isolatedModel || sameAnatomicalRegion(material, isolatedMaterial);
   });
   if (hit) {
@@ -751,7 +728,6 @@ function selectAnatomyPart(name) {
     if (index >= 0 && !match) match = { mesh, index };
   });
   if (!match) { anatomyBrowser.select(name); return; }
-  // La lista también permite escoger otra pieza durante un aislamiento.
   const material = (Array.isArray(match.mesh.material) ? match.mesh.material : [match.mesh.material])[match.index];
   if (isolatedModel && !sameAnatomicalRegion(material, isolatedMaterial)) restoreIsolation();
   applyAnatomySelection(model, match.mesh, match.index, activeToolId);
@@ -815,7 +791,7 @@ function initFormulas() {
     const threshold = state.tfg > 0 ? Math.ceil(state.tmg * 100 / state.tfg) : Infinity;
     const thresholdButton = $('[data-preset="threshold"]');
     thresholdButton.disabled = threshold < Number($('#slider-pglu').min) || threshold > Number($('#slider-pglu').max);
-    thresholdButton.title = thresholdButton.disabled ? 'El umbral calculado queda fuera del rango del slider de glucemia.'
+    thresholdButton.title = thresholdButton.disabled ? 'El umbral calculated queda fuera del rango del slider de glucemia.'
       : 'Glucemia para que la carga filtrada alcance TmG con la TFG activa.';
     filtrationModule.setState(state);
   }
@@ -890,7 +866,6 @@ function switchModule(id) {
   formulasManager.switchFormulaModule(id);
   anatomyBrowser.setActive(id === '1');
 
-  // Modelos 3D visibles
   if (kidneyModel) {
     kidneyModel.visible = id === '1' && anatomyKind === 'kidney';
   }
@@ -946,7 +921,6 @@ installScreenshotButton({
   beforeCapture() {
     resizeCanvas();
     renderer.render(scene, camera);
-    // Las miniaturas se dibujan solo al cambiar; refrescarlas evita capturas vacías.
     const previews = [anatomyBrowser.partPreview,
       ...anatomyBrowser.modelButtons.map(item => item.preview),
       ...glucoseModule.modelButtons.map(item => item.preview)];
@@ -982,7 +956,6 @@ toolBtns.forEach((btn) => {
     if (btn.id === 'btn-draw') return;
     if (btn.classList.contains('requires-cut')) return;
 
-
     if (btn.id !== activeToolId) restoreIsolation();
     setDrawingMode(false);
     toolBtns.forEach((button) => button.classList.remove('active'));
@@ -1013,7 +986,6 @@ document.querySelector('#btn-panel').addEventListener('click', toggleInfoPanel);
 function animate() {
   requestAnimationFrame(animate);
   const dt = Math.min(frameClock.getDelta(), .05);
-  // El visor oculto no necesita dibujar ni avanzar mientras se estudia en Biblioteca.
   if (document.hidden || document.body.classList.contains('library-screen-open')) return;
   resizeCanvas();
   controls.update();
@@ -1029,10 +1001,52 @@ loadDetailedAnatomy('glomerulus');
 loadDetailedAnatomy('nephron');
 loadDetailedAnatomy('nephron85');
 
-// Read-only handles used to inspect integration without changing the simulation.
-window.atlasRenal = { glucoseModule, filtrationModule, scene, camera, controls,
+// Exposición global para integración con microsoft.js
+window.atlasRenal = {
+  glucoseModule,
+  filtrationModule,
+  scene,
+  camera,
+  controls,
   get activeTab() { return currentActiveTab; },
   get anatomyKind() { return anatomyKind; },
-  get anatomyModel() { return getActiveModel(); } };
+  get anatomyModel() { return getActiveModel(); },
+  getAnnotations: () => {
+    return {
+      anatomyStrokes: anatomyStrokes,
+      moduleStrokes: moduleStrokes
+    };
+  },
+  setAnnotations: (data) => {
+    if (!data) return;
+
+    if (data.anatomyStrokes && typeof data.anatomyStrokes === 'object') {
+      for (const key of Object.keys(anatomyStrokes)) {
+        if (Array.isArray(data.anatomyStrokes[key])) {
+          anatomyStrokes[key].length = 0;
+          anatomyStrokes[key].push(...data.anatomyStrokes[key]);
+        }
+      }
+    }
+
+    if (data.moduleStrokes && typeof data.moduleStrokes === 'object') {
+      if (data.moduleStrokes['2'] && typeof data.moduleStrokes['2'] === 'object') {
+        for (const key of Object.keys(moduleStrokes['2'])) {
+          if (Array.isArray(data.moduleStrokes['2'][key])) {
+            moduleStrokes['2'][key].length = 0;
+            moduleStrokes['2'][key].push(...data.moduleStrokes['2'][key]);
+          }
+        }
+      }
+      if (Array.isArray(data.moduleStrokes['3'])) {
+        moduleStrokes['3'].length = 0;
+        moduleStrokes['3'].push(...data.moduleStrokes['3']);
+      }
+    }
+
+    redrawAnnotations();
+  }
+};
+
 resizeAnnotationCanvas();
 animate();
